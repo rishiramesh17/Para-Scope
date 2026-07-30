@@ -150,11 +150,36 @@ not a defect.
 
 ### Consequences for Gate 11 — decide before assembly, not during
 
-1. **Rename the index.** "Whole-Construct Comparative Evidence Index" overclaims —
-   the analysis is variable-domain-only. **Variable-Domain Comparative Evidence Index**
-   costs nothing and removes the overclaim. Do this regardless of everything else.
-   Note this conflicts with the term fixed in `CLAUDE.md`'s terminology table; that
-   table needs updating in the same change.
+1. **Make the index state its own scope — do not rename it.** *(decided 2026-07-30;
+   supersedes an earlier proposal to rename it to "Variable-Domain Comparative
+   Evidence Index")*
+
+   Renaming would bake a temporary data gap into permanent vocabulary. Variable-
+   domain-only is a V2 corpus limitation, not a property of the product — SPEC §6.6,
+   §32, and §33 all put construct-level elements in scope. The moment constant-region
+   data lands, the name would have to change back, leaving two names for one index
+   across reports, formula versions, and git history.
+
+   The overclaim does not come from the name. It comes from nothing emitting coverage.
+   §37 *already* requires `Evidence coverage` and `Missing critical evidence` as
+   outputs; implement those and the overclaim disappears with more precision than a
+   rename would give, since a rename never says *which* slots were empty.
+
+   Required fields on every emitted index — `coverage_scope`
+   (`VARIABLE_DOMAIN_ONLY` | `FULL_CONSTRUCT`), `components_present`,
+   `components_missing` (each with status and reason), `weight_set_version`. The
+   displayed name is derived: today it renders "Comparative Evidence Index (variable
+   domain only)"; when data improves the qualifier disappears with no rename.
+
+   This also generalizes where a rename cannot — VHH has no light chain, scFv have
+   linkers, bispecifics have two arms, and §37 already warns its weights are
+   format-specific. Scope is that same parameter made explicit.
+
+   **Never renormalize silently.** The geometric mean divides by
+   `Σ(weight × reliability)`, so dropping Constant/Fc's 0.05 self-normalizes and the
+   index looks complete. Coverage reporting is the only thing that makes it visible.
+
+   Recorded in `CLAUDE.md` under "The index must state its own scope."
 2. **Add isotype-level constant-region precedent.** Best value-per-effort remaining.
    From metadata already ingested: `CH1 Isotype: G1 667 · G4 200 · G2 77` (22 distinct);
    `VD LC: Kappa 847 · Lambda 117`. This supports honestly reporting "this VH's closest
@@ -166,10 +191,12 @@ not a defect.
    region from IMGT reference, not observed in any source record," and it can never be
    compared against observed full chains as though it were one.
 
-Unresolved and blocking Gate 11's output shape: **is Constant/Fc a "critical"
-component?** SPEC §37 forbids calculating the index when critical evidence is missing.
-With Constant/Fc weighted 0.05 and permanently empty, this definition determines
-whether Gate 11 emits a number or "Insufficient evidence for a whole-construct index."
+**Resolved 2026-07-30 — is Constant/Fc a "critical" component?** It is not absolute;
+it is per format. Define `required_components` for each construct format: Constant/Fc
+is **not** required to claim `VARIABLE_DOMAIN_ONLY` scope, and **is** required to
+claim `FULL_CONSTRUCT` scope. So Gate 11 does emit a number today, but may only ever
+claim the scope it actually covered — which satisfies SPEC §37's "do not calculate the
+index when critical evidence is missing" without declaring Fc non-critical by fiat.
 
 ---
 

@@ -65,6 +65,36 @@ Any user-facing summary score must carry this text verbatim:
 
 > This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.
 
+### The index must state its own scope
+
+The term stays "Whole-Construct Comparative Evidence Index" — it names the spec's
+concept (SPEC §37) and the platform's target, not whatever subset of components
+happens to be populated today. Do **not** rename it to match a temporary data gap.
+
+Instead, every emitted index carries its coverage as required, machine-readable
+fields, and the displayed name is *derived* from them:
+
+- `coverage_scope` — `VARIABLE_DOMAIN_ONLY` | `FULL_CONSTRUCT`
+- `components_present` — the slots that contributed
+- `components_missing` — each with an explicit status and reason
+- `weight_set_version` — §37's weights are format-specific and provisional
+
+So an index computed today renders as "Comparative Evidence Index (variable domain
+only)" because `coverage_scope` says so. When constant-region data lands, the
+qualifier disappears on its own with no rename and no discontinuity in the record.
+
+Two rules this exists to enforce:
+
+- **Never renormalize silently.** The §37 geometric mean divides by
+  `Σ(weight × reliability)`, so omitting a component self-normalizes and the index
+  *looks* complete. Coverage reporting is the only thing that makes the omission
+  visible. `Evidence coverage` and `Missing critical evidence` are already required
+  §37 outputs — emit them.
+- **"Critical" is per format, not absolute.** Define `required_components` for each
+  format. Constant/Fc is not required to claim variable-domain scope; it is required
+  to claim full-construct scope. The index may compute, but may only ever claim the
+  scope it actually covered.
+
 ## Current state — read this before proposing work
 
 **[docs/ROADMAP.md](docs/ROADMAP.md) is the source of truth for what is built, what
