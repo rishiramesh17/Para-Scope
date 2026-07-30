@@ -65,10 +65,52 @@ Any user-facing summary score must carry this text verbatim:
 
 > This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.
 
+## Current state — read this before proposing work
+
+**[docs/ROADMAP.md](docs/ROADMAP.md) is the source of truth for what is built, what
+is next, and what is blocked. Read it at the start of any session before planning,
+estimating, or claiming a gate is incomplete.** It is kept current because updating
+it is part of a gate's definition of done — see the checklist at the end of that
+file. If it disagrees with your recollection, the file is right.
+
+Work proceeds in numbered gates. Gates 0–5 are complete; Gate 6 is next.
+
 ## Architecture
 
-No code yet. Stack and module layout are still being decided.
+Python 3.13, `src/` layout, package `antigens` (repo is named Para-Scope; the
+package name has not been renamed). Dependencies are deliberately few: `anarcii`
+for numbering, `biopython` for alignment and residue chemistry.
+
+```
+src/antigens/
+  models.py        Component/evidence dataclasses and enums
+  numbering.py     ANARCII wrapper, IMGT coordinates, region extraction
+  corpus.py        In-memory corpus, ingestion, CORPUS_SCHEMA_VERSION
+  persistence.py   Snapshot save/load, CACHE_FORMAT_VERSION, StaleSnapshotError
+  features.py      Deterministic sequence features (Gate 4)
+  motifs.py        Motif observations in IMGT coordinates (Gate 5)
+  indexes/         exact, positional, pair, approximate, shortlist
+  parsers/         sabdab2, thera_sabdab
+```
+
+Two invariants that cut across the code and are easy to break:
+
+- **Versioned constants gate reproducibility.** `CORPUS_SCHEMA_VERSION`,
+  `CACHE_FORMAT_VERSION`, `ALIGNMENT_SCORING_VERSION`, `FEATURE_ENGINE_VERSION`.
+  Adding state to `Corpus` requires bumping its schema version, or old snapshots
+  deserialize silently missing attributes and fail far from the cause.
+- **`data/` is gitignored and regenerable.** Corpus snapshots and the numbering
+  cache never enter git. A fresh clone must rebuild via `scripts/` before the
+  integration tests can run.
 
 ## Development commands
 
-No build system yet.
+```bash
+.venv/bin/python -m pytest              # full suite (~30 s, 150 tests)
+.venv/bin/python -m pytest -q tests/    # unit only; tests/integration needs the corpus
+
+# Corpus rebuild (required after a fresh clone; ~8.5 min cold, ~7 s cached)
+.venv/bin/python scripts/build_v2_corpus_cache.py       # SAbDab2
+.venv/bin/python scripts/build_combined_corpus_cache.py  # + Thera-SAbDab
+.venv/bin/python scripts/benchmark_two_stage_search.py   # shortlist recall/latency
+```
