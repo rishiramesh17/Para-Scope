@@ -1,0 +1,144 @@
+{
+  "source_snapshot": {
+    "raw_checksum": "f0b0aa6dae7d4e064cd09b843cc426c57368bb0bd7223dc3d910f4efe02596bc",
+    "parser_version": "1.0.0",
+    "created_at": "2026-07-29T19:21:48.447010+00:00"
+  },
+  "corpus_stats_at_build_time": {
+    "rows_seen": 15641,
+    "rows_skipped_unsupported": 1375,
+    "heavy_chains_parsed": 14157,
+    "light_chains_parsed": 10889,
+    "numbering_failures": 72,
+    "unique_components": 39765,
+    "observed_pairs": 10789,
+    "unique_parent_antibodies": 5050,
+    "warning_count": 1447
+  },
+  "queries": [
+    {
+      "category": "exact_match",
+      "query_sequence": "SEVQLVESGGGLVQPDGSLRLSCAVSGYNITSGYSWNWIRQTPGKGLEWVASVTYDGSTNYNPSVKGRITISRDGSKNTFYLQMNSLRAEDTAVYYCAKGNNYFGHWHFAVWGQGTLVTVSSG",
+      "query_sequence_checksum": "0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "component_type_hint": "VH",
+      "expected_record_id": "VH::0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expect": {
+        "exact_match_rank": 1,
+        "sequence_identity": 1.0
+      }
+    },
+    {
+      "category": "single_substitution",
+      "query_sequence": "SEVQLVESGGGLVQPDGSYRLSCAVSGYNITSGYSWNWIRQTPGKGLEWVASVTYDGSTNYNPSVKGRITISRDGSKNTFYLQMNSLRAEDTAVYYCAKGNNYFGHWHFAVWGQGTLVTVSSG",
+      "component_type_hint": "VH",
+      "expected_record_id": "VH::0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expect": {
+        "top_hit_rank": 1,
+        "sequence_identity_min": 0.983739837398374
+      }
+    },
+    {
+      "category": "several_substitution",
+      "query_sequence": "SEVQLVESMGGHKQPDGSLRLSCAVSGYNITSGYSWNWIRQTPGKGLEWVASVTYDGSTNYNPSVKGRITISRDGSKNTFYLQMNSLRAEDTAVYYCAKGNNYFGHWHFHVNGQGTLVTVSSG",
+      "component_type_hint": "VH",
+      "expected_record_id": "VH::0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expect": {
+        "top_hit_rank": 1,
+        "sequence_identity_min": 0.9186991869918699
+      }
+    },
+    {
+      "category": "similar_nonidentical",
+      "query_sequence": "QVQLVQSGGGVVKTGRSQRVSCATSGFTFSSYAIHWVRQAPGKGLEWVAVISYDGSNKYYADSVKGRFTISRDSSKNTVYLQMNSLRTEDTAVYYCARSQASWQAFDYWGQGTLVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVEPKSCDK",
+      "component_type_hint": "VH",
+      "reference_record_id": "VH::00196b404a0b24e82f2558829a8a6f25db4a63638ac72aa79ca7fdc7837de91b",
+      "expect": {
+        "description": "two distinct real VH records; not expected to match each other"
+      }
+    },
+    {
+      "category": "long_cdr_h3",
+      "query_sequence": "TTVHQKTTKQKSCPEGWSFADRCYYGSGSCSGYDCYGDGDSGGCGAYSSYHCYTCTYCYEWYVDA",
+      "query_sequence_checksum": "08d5c9daafce401489da3c00f501af6651edbcb2f75684993e828344bd9a3797",
+      "component_type_hint": "CDR-H3",
+      "expected_record_id": "CDR-H3::08d5c9daafce401489da3c00f501af6651edbcb2f75684993e828344bd9a3797",
+      "expect": {
+        "length": 65
+      }
+    },
+    {
+      "category": "insertion_coded_cdr",
+      "query_sequence": "SEVQLVESGGGLVQPDGSLRLSCAVSGYNITSGYSWNWIRQTPGKGLEWVASVTYDGSTNYNPSVKGRITISRDGSKNTFYLQMNSLRAEDTAVYYCAKGNNYFGHWHFAVWGQGTLVTVSSG",
+      "query_sequence_checksum": "0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "component_type_hint": "VH",
+      "expected_record_id": "VH::0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expect": {
+        "description": "component numbering must include at least one non-empty insertion code"
+      }
+    },
+    {
+      "category": "heavy_only",
+      "query_sequence": "EVQLVESGGGLVKPGGSLRLSCSASGFDFDNAWMTWVRQPPGKGLEWVGRITGPGEGWSVDYAAPVEGRFTISRLNSINFLYLEMNNLRMEDSGLYFCARTGKYYDFWSGYPPGEEYFQDWGRGTLVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCD",
+      "query_sequence_checksum": "001cb51b88626cb8c9098fd9fa045439dc7ec342a1d7eee123bd24eb804a6aef",
+      "component_type_hint": "VH",
+      "expected_record_id": "VH::001cb51b88626cb8c9098fd9fa045439dc7ec342a1d7eee123bd24eb804a6aef",
+      "expect": {
+        "description": "query with no accompanying light chain"
+      }
+    },
+    {
+      "category": "light_only",
+      "query_sequence": "DIVMTQSPLSLPVTPGEPASISCRSSQSLLNSNGYNYLDWYLQKPGQSPQLLIYLGSNRASGVPGRFSGSGSGTDFTLKISRVEAEDVGIFYCMQALQTPRTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
+      "query_sequence_checksum": "00475f5417e4a310782e82991e0ff3e723ffd4549efd9970e1c9abf36bf5de48",
+      "component_type_hint": "VL-kappa",
+      "expected_record_id": "VL-kappa::00475f5417e4a310782e82991e0ff3e723ffd4549efd9970e1c9abf36bf5de48",
+      "expect": {
+        "description": "query with no accompanying heavy chain"
+      }
+    },
+    {
+      "category": "paired_vh_vl",
+      "heavy_sequence": "EQMLVESGGDLVKPGGSLKLSCAASGFTFSSYTMSWVRQTPEKRLEWVATISSGGAYTYYPDSVKGRFTISDDNAESTLYLQMSSLRSEDTAMYYCVRRAFDSDVGFASWGHRTLVTVSAAKTTAPSVYPLAPVCGGTTGSSVTLGCLVKGYFPEPVTLTWNSGSLSSGVHTFPAVLQSDLYTLSSSVTVTSSTWPSQSITCNVAHPASSTKVDKKIEPR",
+      "heavy_sequence_checksum": "ca2f1f2c5dc5d6aab6978c095a4c30c93a596fdf05ce3d88a2e2454caf7fcf8e",
+      "light_sequence": "DIVLTQSPASLAVSLGQRATISCRASESVDSYGNSFMHWYQQKPGQPPKLLIYRASNLESGIPARFSGSGSRTDFTLTINPVEADDVATYYCQQSNEDPLTFGAGTKLELKRADAAPTVSIFPPSSEQLTSGGASVVCFLNNFYPKDINVRWKIDGSERQNGVLNSWTDQDSKDSTYSMSSTLTLTKDEYERHNSYTCEATHKTSTSPIVKSFNRA",
+      "light_sequence_checksum": "40e98b292726afa76c119ad1ee08a5206d89273497ff1107a2463447a40926a3",
+      "expect": {
+        "description": "must be found via PairIndex as a directly observed pair"
+      }
+    },
+    {
+      "category": "invalid_sequence",
+      "query_sequence": "MXKZQV123INVALID",
+      "component_type_hint": "VH",
+      "expect": {
+        "description": "must be rejected outright, never partially scored"
+      }
+    },
+    {
+      "category": "truncated_sequence",
+      "query_sequence": "SEVQLVESGGGLVQPDGSLR",
+      "component_type_hint": "VH",
+      "expect": {
+        "description": "must fail numbering loudly or be explicitly flagged incomplete, never silently misrepresented"
+      }
+    },
+    {
+      "category": "duplicate_parent_record",
+      "query_sequence": "SEVQLVESGGGLVQPDGSLRLSCAVSGYNITSGYSWNWIRQTPGKGLEWVASVTYDGSTNYNPSVKGRITISRDGSKNTFYLQMNSLRAEDTAVYYCAKGNNYFGHWHFAVWGQGTLVTVSSG",
+      "query_sequence_checksum": "0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expected_record_id": "VH::0006abd89371087ae505490cbadd1a224dee78df2eb92bd3b653e0597b395c30",
+      "expected_sabdab_id": "H0006L0005",
+      "expect": {
+        "description": "source_pointers must list >1 structure; unique_parent_antibodies must count it once"
+      }
+    },
+    {
+      "category": "no_close_match",
+      "query_sequence": "QSPHLIGGIKTFRMWMNHKCEQYATSLTNQIRWWVYSTKEYSCCCGRKGLRVVNAPLYPKWMTAVNLDQVGAGSWETRDTVIWWSYYVKSLTMINCGDTSKGYNQPQLCMCSIQQVVI",
+      "component_type_hint": "VH",
+      "expect": {
+        "description": "random sequence; must not produce a spurious high-identity top hit"
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Downloaded/derived source snapshots -- large, reproducible from checksummed
+# URLs recorded in SourceSnapshot metadata. Never committed.
+data/
+
+# Claude Code tooling. settings.json (project hook config) is tracked; vendored
+# third-party skills and their lockfile are not -- they are upstream code that
+# would drift from its source.
+.claude/skills/
+skills-lock.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "antigens"
+version = "0.1.0"
+description = "Explainable antibody component comparison and candidate-assembly platform"
+requires-python = ">=3.11"
+dependencies = [
+    "anarcii>=2.0.8",
+    "biopython>=1.84",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+antigens = "antigens.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,59 @@
+{
+  "captured_at": "2026-07-29T00:00:00Z",
+  "git": {
+    "repository_initialized": true,
+    "commits": 0,
+    "note": "No commits exist yet. All source files are untracked. This is the pre-V2 working state."
+  },
+  "software_versions": {
+    "python": "3.13.3",
+    "anarcii": "2.0.8",
+    "biopython": "1.87",
+    "pytest": "9.1.1"
+  },
+  "test_baseline": {
+    "total_tests": 36,
+    "passed": 36,
+    "failed": 0,
+    "runtime_seconds": 6.23,
+    "files": ["tests/test_numbering.py", "tests/test_search.py"]
+  },
+  "corpus_baseline_sabdab2": {
+    "source": "Zenodo record 20083995, ab_split.csv",
+    "raw_checksum": "f0b0aa6dae7d4e064cd09b843cc426c57368bb0bd7223dc3d910f4efe02596bc",
+    "rows_seen": 15641,
+    "rows_skipped_unsupported": 1375,
+    "heavy_chains_parsed": 14157,
+    "light_chains_parsed": 10889,
+    "numbering_failures": 72,
+    "numbering_success_rate": 0.9971,
+    "unique_components": 39765,
+    "observed_pairs": 10789,
+    "unique_parent_antibodies": 5050,
+    "ingest_time_seconds": 6810.86,
+    "index_sizes": {
+      "exact": 39762,
+      "approximate": 24497,
+      "positional": 39765,
+      "pairs": 4564
+    }
+  },
+  "query_latency_baseline_seconds": {
+    "exact_lookup": 0.0,
+    "positional_lookup": 0.05558,
+    "approximate_search_top10_of_4363_VH": 6.022
+  },
+  "data_hygiene": {
+    "data_dir_tracked_by_git": false,
+    "data_dir_size_on_disk": "1.1G",
+    "gitignore_excludes": ["data/", ".venv/", "__pycache__/", "*.pyc", "*.egg-info/", ".pytest_cache/"]
+  },
+  "known_gaps_entering_v2": [
+    "No corpus persistence layer -- full re-ingestion takes ~113 minutes (ANARCII-bound)",
+    "Thera-SAbDab not yet ingested",
+    "FULL_HEAVY / FULL_LIGHT component types have zero records (SAbDab2 is variable-domain-only)",
+    "Approximate search is exhaustive pairwise alignment, ~6s/query -- no shortlist/prefilter stage",
+    "No calibration population exists yet for SPEC S19 Layers 2-4 (percentiles, evidence grades)",
+    "SAbDab2 license_id recorded as 'unspecified' in SourceSnapshot pending confirmation"
+  ]
+}
