@@ -173,11 +173,11 @@ class TestCorpusSnapshotPersistence:
         """
         A snapshot pickled under an older Corpus shape must fail loudly on load.
 
-        Regression: the real SAbDab2 snapshot was built before
-        _therapeutic_name_to_arm_count was added to Corpus.__init__. Unpickling
-        restores the stored __dict__ verbatim, so the loaded object silently
-        lacked that attribute and only failed much later, as an AttributeError
-        deep inside ingest_thera_sabdab.
+        Regression: the real SAbDab2 snapshot was built before the Thera-SAbDab
+        bookkeeping attribute was added to Corpus.__init__ (now the therapeutic
+        entity store, schema 5.0.0). Unpickling restores the stored __dict__
+        verbatim, so the loaded object silently lacked that attribute and only
+        failed much later, as an AttributeError deep inside ingest_thera_sabdab.
         """
         import pickle
 

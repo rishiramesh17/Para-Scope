@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-07-30, against commit on `main`, 180 tests passing.
+Last verified: 2026-07-31, against commit on `main`, 222 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–6 are complete.
+artifact, not a time box. Gates 0–7 are complete.
 
 ---
 
@@ -23,14 +23,14 @@ artifact, not a time box. Gates 0–6 are complete.
 | 4 | Deterministic feature engine | ✅ | `src/antigens/features.py` |
 | 5 | Motif observation engine | ✅ | `src/antigens/motifs.py` |
 | 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
-| **7** | **Therapeutic-precedent profile** | **next — ready, no new data needed** | SPEC §26 |
+| 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
 | 8 | Pairing precedent | ready — PairIndex works; see pair-count note below | SPEC §35 |
-| 9 | Empirical reference distributions | ready | SPEC §19 Layers 2–4 |
+| **9** | **Empirical reference distributions** | **ready — now blocks two gates' composites** | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | 11 | Final profile assembly | — | SPEC §37 |
 
 Corpus under test: 46,627 components, 28,835 approximate-eligible,
-`corpus_schema_version` 4.0.0.
+`corpus_schema_version` 5.0.0, `CACHE_FORMAT_VERSION` 1.2.0.
 
 ---
 
@@ -258,19 +258,81 @@ evidence — the deduplicate-before-counting rule (SPEC §15) applied directly. 
 extra records are still useful as independent-observation *support*, but they are
 not additional pairs.
 
-## Gate 7 constraints
+## Gate 7 — therapeutic precedent ✅
 
+Built 2026-07-31. Full detail in `reports/GATE7_THERAPEUTIC_PRECEDENT.md`; what
+follows is what a future session must not re-derive.
+
+### Two defects found in the path SPEC §26 scores
+
+- **794 of 1,131 therapeutics falsely claimed an experimental structure.** The
+  sequence and metadata columns use the sentinel `na`; the three structure columns
+  use `None`. `_parse_na` only knew `na`, so `"None"` survived as a truthy string
+  and `structure_available` was `True` for every therapeutic. Now 337 structure-backed,
+  794 not. The test fixture used `na` in those columns too, which is why 21 passing
+  tests never caught it — the fixture now carries the real sentinel.
+- **A bispecific's arms shared each other's structures.** Semicolon separates arms
+  within a structure column, slash separates structures within an arm. The old code
+  OR-ed all three columns and flagged both arms alike. Under schema drift the column
+  now resolves to **unknown**, never to a guessed arm.
+
+`PairRecord.structure_available` is `Optional[bool]`. **`None` must never be coerced
+to `False`** — parser version 1.1.0, `corpus_schema_version` 5.0.0.
+
+### The therapeutic entity store
+
+Metadata used to live only on `PairRecord`, so it was reachable only for arms with
+*both* chains — **45 heavy-only arms, every single-domain therapeutic among them,
+had no recoverable name, target, or status at all.** SPEC §26 needs those for any
+supported component, so `Corpus` now holds 1,131 canonical therapeutics, 1,288 arms,
+6,252 alias keys, and 10,186 component→therapeutic links (sub-regions included, so a
+CDR resolves to its therapeutic).
+
+### Aliases: 70 remain ambiguous, and that is correct
+
+`Herceptin` → `Trastuzumab`. An alias claimed by two therapeutics is registered to
+neither and counted; a poisoned set stops a third claimant re-registering it.
+The surviving 70 span 22 pairs of **co-administered combination products** —
+`Evusheld (combination of cilgavimab and tixagevimab)` genuinely denotes two
+entities. Do not "fix" these.
+
+Two splitting rules exist because their absence caused real collisions: semicolons
+inside parentheses do not delimit (a combination name fragmented into a bare
+`Bremzalerbart` that collided with the real drug), and `TBC`/`na`/`ND`/`NFD`/
+`Unknown`/`None` are not names.
+
+### The composite score is withheld — this is not an omission
+
+`score` is `None`, `score_status = insufficient_evidence`. SPEC §26 weights
+*calibrated* similarity at 0.45 and format relevance at 0.10, and neither term
+exists. The four computable sub-terms are emitted as **raw proportions, never
+weighted** — applying weights to a partial set yields something indistinguishable
+from a composite that merely scored low. Gate 9 supplies the similarity term and
+the composite follows with no recomputation.
+
+### Carried into later gates
+
+- **29 therapeutics are numbered variants of one name** (`Lunsekimig1/2/3`). The
+  source splits some drugs across rows, so `therapeutics_matched` can overcount by
+  up to 2. Deliberately not auto-merged: a numeric-suffix rule could merge genuinely
+  distinct drugs. Needs an explicit canonicalisation decision, most likely in Gate 11.
+- **`format_relevance` is unimplemented, not approximated.** `Format` stays free
+  text, verbatim. Finer architecture classification (scFv vs whole mAb vs ADC) is
+  separate, explicitly calibrated work — not an extension of the VHH keyword heuristic.
+- **Clinical stage and development status stay metadata.** 197 approved, 315
+  discontinued. An antibody reaching Phase 3 transfers no property to a sequence
+  resembling it; a test asserts a discontinued programme lowers no measurement.
 - **Both sources carry `license_id = "unspecified"`** — Thera-SAbDab *and* SAbDab2.
-  Only Thera-SAbDab was previously flagged here; SAbDab2's licence was invisible
-  because `_snapshot_to_dict` was discarding the field at save time (fixed
-  2026-07-31, `CACHE_FORMAT_VERSION` 1.2.0). Blocks public deployment and
+  SAbDab2's was invisible until `_snapshot_to_dict` stopped discarding the field
+  (fixed 2026-07-31, `CACHE_FORMAT_VERSION` 1.2.0). Blocks public deployment and
   redistribution; does not block local analysis.
-- **Clinical stage and development status stay metadata.** An antibody reaching Phase 3
-  transfers no property to a sequence resembling it. These must never become a success
-  or failure label.
-- **`Format` free text is stored verbatim.** Finer architecture classification
-  (scFv vs whole mAb vs ADC) is separate, explicitly calibrated work — not an
-  extension of the VHH keyword heuristic.
+
+### Why Gate 9 moved up the critical path
+
+Gate 7 emits everything except its calibrated term. Gate 8 will be in the same
+position, and Gate 11's index consumes both. Calibration is now the single blocker
+on two finished dimensions rather than a later refinement — and it still needs the
+germline baseline discussed above.
 
 ## Minor leftovers
 

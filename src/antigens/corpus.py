@@ -54,7 +54,12 @@ from antigens.parsers.thera_sabdab import (
 #   4.0.0 -- IMGT gap placeholders excluded from region sequence content. This
 #            changes region checksums, so component identity and deduplication
 #            differ from any earlier snapshot; they are not comparable.
-CORPUS_SCHEMA_VERSION = "4.0.0"
+#   5.0.0 -- therapeutic entity store (Gate 7): _therapeutics, _therapeutic_aliases,
+#            _component_to_therapeutics replace _therapeutic_name_to_arm_count.
+#            Also changes PairRecord.structure_available from bool to Optional[bool]
+#            and fixes its Thera-SAbDab value, so pair metadata from an older
+#            snapshot is not comparable either.
+CORPUS_SCHEMA_VERSION = "5.0.0"
 
 REGION_TO_COMPONENT_TYPE: dict[tuple[str, str], ComponentType] = {
     ('H', 'FR1'): ComponentType.FR_H1,
@@ -88,6 +93,91 @@ class CorpusComponentRecord:
 
 
 @dataclass
+class TherapeuticArmRecord:
+    """One variable-domain arm of a therapeutic, linked to the components it contributed.
+
+    Holds record ids rather than sequences: the components themselves are already
+    deduplicated in the corpus, and two therapeutics sharing an identical VH must
+    resolve to the same component record while remaining two distinct therapeutics.
+    """
+    arm_index: int
+    accession: str  # "<therapeutic name>#arm<n>", matching source_pointers
+    heavy_record_id: Optional[str] = None
+    light_record_id: Optional[str] = None
+    is_single_domain: bool = False
+    structures_100_si: Optional[list[str]] = None
+    structures_99_si: Optional[list[str]] = None
+    structures_95_98_si: Optional[list[str]] = None
+
+    @property
+    def has_structure_record(self) -> Optional[bool]:
+        """True/False when any tier is known; None when every tier is unknown."""
+        tiers = (self.structures_100_si, self.structures_99_si, self.structures_95_98_si)
+        if all(tier is None for tier in tiers):
+            return None
+        return any(tier for tier in tiers)
+
+    @property
+    def structure_ids(self) -> list[str]:
+        """Every known structure reference for this arm, highest identity tier first."""
+        ordered: list[str] = []
+        for tier in (self.structures_100_si, self.structures_99_si, self.structures_95_98_si):
+            for ref in tier or []:
+                if ref not in ordered:
+                    ordered.append(ref)
+        return ordered
+
+
+@dataclass
+class TherapeuticRecord:
+    """
+    One canonical therapeutic entity and its curated metadata (SPEC S15.5, S26).
+
+    Exists because therapeutic metadata was previously reachable only through
+    PairRecord.metadata, which meant a therapeutic whose arm has no light chain --
+    every single-domain therapeutic among them -- carried no recoverable name,
+    target, format, or development status at all. SPEC S26 requires all of those as
+    display fields for any supported component, so they cannot depend on the arm
+    happening to be paired.
+
+    `highest_clinical_trial` and `development_status` are metadata and nothing more.
+    An antibody reaching Phase III transfers no property whatever to a sequence that
+    resembles it, and neither field may become a success or failure label.
+    """
+    therapeutic_name: str  # canonical
+    format_raw: str        # free text, verbatim, never classified beyond is_single_domain
+    alternative_names: list[str] = field(default_factory=list)
+    ch1_isotype: Optional[str] = None
+    light_chain_class_label: Optional[str] = None
+    highest_clinical_trial: Optional[str] = None
+    development_status: Optional[str] = None
+    target: Optional[str] = None
+    arms: list[TherapeuticArmRecord] = field(default_factory=list)
+
+    # Fields SPEC S26 lists under "therapeutic-record completeness". Kept as an
+    # explicit tuple so the denominator is auditable rather than implied by
+    # whichever attributes a future reader thinks ought to count.
+    COMPLETENESS_FIELDS = (
+        "target", "format_raw", "ch1_isotype", "light_chain_class_label",
+        "highest_clinical_trial", "development_status",
+    )
+
+    @property
+    def metadata_completeness(self) -> float:
+        """Fraction of SPEC S26's metadata fields this record actually carries."""
+        present = sum(1 for name in self.COMPLETENESS_FIELDS if getattr(self, name))
+        return present / len(self.COMPLETENESS_FIELDS)
+
+    @property
+    def has_structure_record(self) -> Optional[bool]:
+        """Whether any arm is structure-backed; None only if every arm is unknown."""
+        per_arm = [arm.has_structure_record for arm in self.arms]
+        if all(value is None for value in per_arm):
+            return None
+        return any(per_arm)
+
+
+@dataclass
 class IngestStats:
     rows_seen: int = 0
     rows_skipped_unsupported: int = 0
@@ -97,7 +187,54 @@ class IngestStats:
     unique_components: int = 0
     observed_pairs: int = 0
     unique_parent_antibodies: int = 0
+    # Aliases claimed by more than one therapeutic. Such an alias is registered to
+    # neither, since resolving it either way would merge two distinct entities.
+    therapeutic_alias_collisions: int = 0
     warnings: list[str] = field(default_factory=list)
+
+
+# Values that appear in the alternative-names column but are placeholders rather
+# than names. Registering one as an alias would let unrelated therapeutics collide
+# on it, and would let a user searching "unknown" resolve to a drug.
+_ALIAS_PLACEHOLDERS = frozenset({"na", "n/a", "nd", "nfd", "tbc", "unknown", "none", "-"})
+
+
+def split_alternative_names(raw: Optional[str]) -> list[str]:
+    """
+    Split Thera-SAbDab's semicolon-delimited alternative-names field.
+
+    Semicolons inside parentheses do not delimit: combination products are written
+    as 'REGN5713-5714-5715 (combination of Atisnolerbart; Bremzalerbart; and
+    Umesolerbart)', and a naive split yields the fragments 'Bremzalerbart' and
+    'and Umesolerbart)'. The first then collides with the real therapeutic of that
+    name and poisons a legitimate alias; the second is not a name at all.
+
+    The combination identifier itself is kept whole. It genuinely refers to several
+    therapeutics, so it collides by design -- and being left unresolved is the
+    correct outcome for a name that does not denote one entity (SPEC S15.5).
+    """
+    if not raw:
+        return []
+
+    names: list[str] = []
+    current: list[str] = []
+    depth = 0
+    for character in raw:
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth = max(0, depth - 1)
+        if character == ";" and depth == 0:
+            names.append("".join(current))
+            current = []
+        else:
+            current.append(character)
+    names.append("".join(current))
+
+    return [
+        name.strip() for name in names
+        if name.strip() and name.strip().lower() not in _ALIAS_PLACEHOLDERS
+    ]
 
 
 def _resolve_light_component_type(chain_type: str) -> ComponentType:
@@ -148,7 +285,17 @@ class Corpus:
         self._components: dict[str, CorpusComponentRecord] = {}
         self._checksum_to_record_id: dict[tuple[ComponentType, str], str] = {}
         self._sabdab_id_to_pdb_ids: dict[str, set[str]] = {}
-        self._therapeutic_name_to_arm_count: dict[str, int] = {}
+        # Canonical therapeutic name -> record (SPEC S15.5: one entity per therapeutic).
+        self._therapeutics: dict[str, TherapeuticRecord] = {}
+        # Lowercased alias/development code -> canonical name. Ambiguous aliases are
+        # absent rather than arbitrarily resolved.
+        self._therapeutic_aliases: dict[str, str] = {}
+        # Aliases proven ambiguous. Kept explicitly so a third claimant cannot
+        # re-register an alias that a collision already removed from the map.
+        self._ambiguous_therapeutic_aliases: set[str] = set()
+        # Component record id -> canonical therapeutic names that contributed it. The
+        # reverse edge Gate 7 needs: an alignment hit knows its record id and nothing else.
+        self._component_to_therapeutics: dict[str, set[str]] = {}
         # Numbering cache used by (or extended during) the most recent ingest_sabdab2
         # call. Exposed so callers (persistence.py) can save it to disk and skip
         # ANARCII entirely on a future ingest of the same source data -- measured
@@ -160,6 +307,55 @@ class Corpus:
 
     def __len__(self) -> int:
         return len(self._components)
+
+    def get_therapeutic(self, name: str) -> Optional[TherapeuticRecord]:
+        """Resolve a therapeutic by canonical name, alias, or development code (SPEC S15.5)."""
+        record = self._therapeutics.get(name)
+        if record is not None:
+            return record
+        canonical = self._therapeutic_aliases.get(name.strip().lower())
+        return self._therapeutics.get(canonical) if canonical else None
+
+    def therapeutics_for_component(self, record_id: str) -> list[TherapeuticRecord]:
+        """Every therapeutic that contributed this exact component.
+
+        More than one is normal and is not a duplicate: distinct therapeutics can
+        share an identical framework or CDR, and each is independent evidence. The
+        component is deduplicated; the therapeutics behind it are not.
+        """
+        names = self._component_to_therapeutics.get(record_id, set())
+        return [self._therapeutics[name] for name in sorted(names) if name in self._therapeutics]
+
+    @property
+    def therapeutics(self) -> dict[str, TherapeuticRecord]:
+        return self._therapeutics
+
+    def _register_therapeutic_aliases(
+        self, record: TherapeuticRecord, stats: IngestStats
+    ) -> None:
+        """Map a therapeutic's names and development codes onto its canonical entity.
+
+        An alias claimed by two different therapeutics is registered to neither and
+        counted: silently letting the later row win would make lookups resolve to
+        whichever happened to be parsed last, and quietly merge two entities that
+        SPEC S15.5 requires be kept distinct.
+        """
+        canonical = record.therapeutic_name
+        for alias in [canonical, *record.alternative_names]:
+            key = alias.strip().lower()
+            if not key or key in self._ambiguous_therapeutic_aliases:
+                continue
+            existing = self._therapeutic_aliases.get(key)
+            if existing is None:
+                self._therapeutic_aliases[key] = canonical
+            elif existing != canonical:
+                del self._therapeutic_aliases[key]
+                self._ambiguous_therapeutic_aliases.add(key)
+                stats.therapeutic_alias_collisions += 1
+                stats.warnings.append(
+                    f"therapeutic alias {alias!r} claimed by both {existing!r} and "
+                    f"{canonical!r}; left unresolved rather than assigned to either"
+                )
 
     def _add_component(
         self,
@@ -206,10 +402,21 @@ class Corpus:
         resolve_component_type: ComponentTypeResolver,
         source_database: str,
         source_accession: str,
-    ) -> None:
-        """Index one already-numbered chain's variable domain plus all IMGT sub-regions."""
+        therapeutic_name: Optional[str] = None,
+    ) -> str:
+        """Index one already-numbered chain's variable domain plus all IMGT sub-regions.
+
+        Returns the variable domain's record id. `therapeutic_name`, when given,
+        links every component this chain contributes -- the domain and each
+        sub-region -- back to the therapeutic, so Gate 7 can answer "which
+        therapeutics contain this CDR" from an alignment hit alone.
+        """
         component_type = resolve_component_type(numbered.chain_type)
-        self._add_component(component_type, numbered.original_sequence, numbered, source_database, source_accession)
+        domain_record_id = self._add_component(
+            component_type, numbered.original_sequence, numbered, source_database, source_accession
+        )
+        if therapeutic_name is not None:
+            self._component_to_therapeutics.setdefault(domain_record_id, set()).add(therapeutic_name)
 
         chain_label = 'H' if numbered.chain_type == 'H' else 'L'
         for region_name in IMGT_REGION_BOUNDARIES:
@@ -218,7 +425,13 @@ class Corpus:
                 continue
             region_component_type = REGION_TO_COMPONENT_TYPE[(chain_label, region_name)]
             region_numbered = _sub_numbered(numbered, region_name, region_seq)
-            self._add_component(region_component_type, region_seq, region_numbered, source_database, source_accession)
+            region_record_id = self._add_component(
+                region_component_type, region_seq, region_numbered, source_database, source_accession
+            )
+            if therapeutic_name is not None:
+                self._component_to_therapeutics.setdefault(region_record_id, set()).add(therapeutic_name)
+
+        return domain_record_id
 
     def ingest_sabdab2(
         self,
@@ -302,7 +515,7 @@ class Corpus:
                 stats.observed_pairs += 1
 
         stats.unique_components = len(self._components)
-        stats.unique_parent_antibodies = len(self._sabdab_id_to_pdb_ids) + len(self._therapeutic_name_to_arm_count)
+        stats.unique_parent_antibodies = len(self._sabdab_id_to_pdb_ids) + len(self._therapeutics)
         return stats
 
     def ingest_thera_sabdab(
@@ -355,11 +568,34 @@ class Corpus:
         self.last_numbering_cache = numbering_cache
 
         for row in rows:
-            arm_count = self._therapeutic_name_to_arm_count.get(row.therapeutic_name, 0)
+            therapeutic = self._therapeutics.get(row.therapeutic_name)
+            if therapeutic is None:
+                therapeutic = TherapeuticRecord(
+                    therapeutic_name=row.therapeutic_name,
+                    format_raw=row.format_raw,
+                    alternative_names=split_alternative_names(row.alternative_names),
+                    ch1_isotype=row.ch1_isotype,
+                    light_chain_class_label=row.light_chain_class_label,
+                    highest_clinical_trial=row.highest_clinical_trial,
+                    development_status=row.development_status,
+                    target=row.target,
+                )
+                self._therapeutics[row.therapeutic_name] = therapeutic
+                self._register_therapeutic_aliases(therapeutic, stats)
 
             for arm in row.arms:
                 accession = f"{row.therapeutic_name}#arm{arm.arm_index}"
                 warning_key = accession
+
+                arm_record = TherapeuticArmRecord(
+                    arm_index=arm.arm_index,
+                    accession=accession,
+                    is_single_domain=arm.is_single_domain,
+                    structures_100_si=arm.structures_100_si,
+                    structures_99_si=arm.structures_99_si,
+                    structures_95_98_si=arm.structures_95_98_si,
+                )
+                therapeutic.arms.append(arm_record)
 
                 heavy_numbered = self._resolve_chain_by_key(
                     arm.heavy_sequence, numbering_cache, HEAVY_CHAIN_TYPES, warning_key, stats
@@ -367,8 +603,9 @@ class Corpus:
                 heavy_component_type = ComponentType.VHH if arm.is_single_domain else ComponentType.VH
                 if heavy_numbered is not None:
                     stats.heavy_chains_parsed += 1
-                    self._add_chain(
-                        heavy_numbered, lambda _ct: heavy_component_type, "Thera-SAbDab", accession
+                    arm_record.heavy_record_id = self._add_chain(
+                        heavy_numbered, lambda _ct: heavy_component_type, "Thera-SAbDab", accession,
+                        therapeutic_name=row.therapeutic_name,
                     )
 
                 light_numbered = None
@@ -378,7 +615,10 @@ class Corpus:
                     )
                     if light_numbered is not None:
                         stats.light_chains_parsed += 1
-                        self._add_chain(light_numbered, _resolve_light_component_type, "Thera-SAbDab", accession)
+                        arm_record.light_record_id = self._add_chain(
+                            light_numbered, _resolve_light_component_type, "Thera-SAbDab", accession,
+                            therapeutic_name=row.therapeutic_name,
+                        )
 
                 if heavy_numbered is not None and light_numbered is not None:
                     self.pairs.add(
@@ -387,9 +627,10 @@ class Corpus:
                         PairRecord(
                             source_database="Thera-SAbDab",
                             source_accession=accession,
-                            structure_available=bool(
-                                row.structure_100_si or row.structure_99_si or row.structure_95_98_si
-                            ),
+                            # This arm's own structures, not the row's. OR-ing the
+                            # columns credited a bispecific's first arm with the
+                            # second arm's experimental records.
+                            structure_available=arm_record.has_structure_record,
                             metadata={
                                 "therapeutic_name": row.therapeutic_name,
                                 "format": row.format_raw,
@@ -397,16 +638,14 @@ class Corpus:
                                 "highest_clinical_trial": row.highest_clinical_trial,
                                 "target": row.target,
                                 "arm_index": arm.arm_index,
+                                "structure_ids": arm_record.structure_ids,
                             },
                         ),
                     )
                     stats.observed_pairs += 1
 
-            arm_count += len(row.arms)
-            self._therapeutic_name_to_arm_count[row.therapeutic_name] = arm_count
-
         stats.unique_components = len(self._components)
-        stats.unique_parent_antibodies = len(self._sabdab_id_to_pdb_ids) + len(self._therapeutic_name_to_arm_count)
+        stats.unique_parent_antibodies = len(self._sabdab_id_to_pdb_ids) + len(self._therapeutics)
         return stats
 
     @staticmethod

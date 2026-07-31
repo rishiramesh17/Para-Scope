@@ -32,6 +32,29 @@ heuristic is necessarily approximate given free-text input; rows it cannot
 confidently classify default to conventional VH, which fails safe. If the
 Format text is later found to false-negative to VHH in a specific case,
 that's a heuristic-accuracy correction, not a schema issue.
+
+Two missing-data sentinels, not one
+-----------------------------------
+The sequence and metadata columns write missing data as the literal string
+'na'. The three structure-link columns do not: they write the literal string
+'None'. Treating only 'na' as missing made every structure column truthy, so
+794 of 1,131 therapeutics were recorded as having an experimental structure
+record when the source says they have none -- a fabricated evidence flag on
+a field SPEC S26 scores directly. Structure columns therefore get their own
+parser rather than sharing the 'na' one; the general sentinel is left alone so
+a legitimate value elsewhere cannot be clobbered by widening it.
+
+Structure links are per arm
+---------------------------
+Within a structure column, a semicolon separates the primary arm's links from
+the bispecific arm's ('None;8z8v:B' = nothing for arm 1, one structure for
+arm 2), and a slash separates multiple structures within one arm. Measured on
+the real file: all 157 two-arm rows are semicolon-split and none of the 974
+single-arm rows are, across all three columns (3,393/3,393 values align).
+OR-ing the columns together and giving both arms the same flag would credit
+arm 1 with arm 2's structures. If a future release breaks that alignment, the
+affected column resolves to *unknown* for that row rather than being
+misattributed -- a wrong arm is worse than an absent one.
 """
 
 import csv
@@ -40,7 +63,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Optional
 
-PARSER_VERSION = "1.0.0"
+#   1.0.0 -- initial
+#   1.1.0 -- structure columns use the 'None' sentinel, not 'na', and are split
+#            per arm. Before this, structure_available was True for every
+#            therapeutic (794 of them falsely).
+PARSER_VERSION = "1.1.0"
 
 # Column names copied verbatim from the real downloaded header, including the
 # embedded date-stamp in "Highest_Clin_Trial (Feb '25)". If a future release
@@ -60,6 +87,16 @@ _SINGLE_DOMAIN_KEYWORDS = ("nanobody", "vhh", "single domain")
 
 _NA_SENTINEL = "na"
 
+# The structure columns' own missing-data sentinel. Distinct from _NA_SENTINEL on
+# purpose -- see the module docstring. Deliberately not folded into _parse_na:
+# widening the general sentinel would silently drop any other column whose real
+# value happened to be the word "None".
+_STRUCTURE_ABSENT_SENTINEL = "none"
+
+# Separators inside a structure column: arms first, then structures within an arm.
+_ARM_SEPARATOR = ";"
+_STRUCTURE_SEPARATOR = "/"
+
 
 def _parse_na(value: Optional[str]) -> Optional[str]:
     """Thera-SAbDab uses the literal string 'na' (not a blank cell) for missing data."""
@@ -69,6 +106,39 @@ def _parse_na(value: Optional[str]) -> Optional[str]:
     if not cleaned or cleaned.lower() == _NA_SENTINEL:
         return None
     return cleaned
+
+
+def split_structure_column(value: Optional[str], arm_count: int) -> Optional[list[list[str]]]:
+    """
+    Split one structure column into per-arm lists of structure references.
+
+    Returns one list per arm, each holding that arm's structure identifiers with
+    the 'None' sentinel removed (so an empty list means "the source states there
+    is no structure", which is a finding, not missing data).
+
+    Returns None -- meaning *unknown*, not *absent* -- when the number of
+    semicolon-separated tokens does not match the number of arms. That never
+    happens on the file this parser was written against (3,393/3,393 values
+    align), so it signals schema drift, and under drift the honest answer is that
+    the mapping is unknown. Guessing would attribute one arm's experimental
+    structures to a different specificity.
+    """
+    if value is None or arm_count <= 0:
+        return None
+
+    tokens = [token.strip() for token in value.split(_ARM_SEPARATOR)]
+    if len(tokens) != arm_count:
+        return None
+
+    per_arm: list[list[str]] = []
+    for token in tokens:
+        refs = [
+            ref.strip()
+            for ref in token.split(_STRUCTURE_SEPARATOR)
+            if ref.strip() and ref.strip().lower() != _STRUCTURE_ABSENT_SENTINEL
+        ]
+        per_arm.append(refs)
+    return per_arm
 
 
 def is_single_domain_format(format_text: Optional[str]) -> bool:
@@ -86,6 +156,28 @@ class TheraSAbDabArm:
     heavy_sequence: Optional[str]
     light_sequence: Optional[str]
     is_single_domain: bool  # heuristic: heavy chain has no paired VL by design (VHH-like)
+
+    # Structure references for *this arm only*, at each sequence-identity tier.
+    # Three-state, and the distinction is load-bearing:
+    #   None  -- unknown; the column could not be mapped to arms (schema drift)
+    #   []    -- the source states this arm has no structure at this tier
+    #   [ids] -- these structure records
+    structures_100_si: Optional[list[str]] = None
+    structures_99_si: Optional[list[str]] = None
+    structures_95_98_si: Optional[list[str]] = None
+
+    @property
+    def has_structure_record(self) -> Optional[bool]:
+        """True/False if any tier is known, None if every tier is unknown.
+
+        None must never be coerced to False by a caller: "we could not determine
+        whether a structure exists" is not "no structure exists" (CLAUDE.md,
+        missing evidence is not zero evidence).
+        """
+        tiers = (self.structures_100_si, self.structures_99_si, self.structures_95_98_si)
+        if all(tier is None for tier in tiers):
+            return None
+        return any(tier for tier in tiers)
 
 
 @dataclass
@@ -144,6 +236,19 @@ def parse_thera_sabdab_csv(path: Path) -> Iterator[TheraSAbDabRow]:
                     light_sequence=bispec_light,
                     is_single_domain=single_domain,
                 ))
+
+            # Structure links resolve only once the arm count is known, since the
+            # columns are split by arm. Assigned by arm_index, not list position.
+            raw_structures = {
+                "structures_100_si": row["100% SI Structure"],
+                "structures_99_si": row["99% SI Structure"],
+                "structures_95_98_si": row["95-98% SI Structure"],
+            }
+            for field_name, raw_value in raw_structures.items():
+                per_arm = split_structure_column(raw_value, len(arms))
+                for arm in arms:
+                    resolved = per_arm[arm.arm_index - 1] if per_arm is not None else None
+                    setattr(arm, field_name, resolved)
 
             supported = len(arms) > 0
             skip_reason = None if supported else (

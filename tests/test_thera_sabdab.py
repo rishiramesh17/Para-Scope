@@ -59,9 +59,12 @@ def _base_row(**overrides) -> dict:
         "LightSequence": TRASTUZUMAB_VL,
         "HeavySequence(ifbispec)": "na",
         "LightSequence(ifbispec)": "na",
-        "100% SI Structure": "na",
-        "99% SI Structure": "na",
-        "95-98% SI Structure": "na",
+        # The structure columns write missing data as the literal 'None', NOT as
+        # 'na'. This fixture said 'na' and so never exercised the real sentinel,
+        # which is how 794 therapeutics came to be flagged structure-backed.
+        "100% SI Structure": "None",
+        "99% SI Structure": "None",
+        "95-98% SI Structure": "None",
         "Target": "HER2",
         "Alternative Therapeutic Names": "na",
     }
@@ -261,3 +264,94 @@ class TestCorpusThereSAbDabIngestion:
         record = corpus.get(record_id)
         source_dbs = {src for src, _accession in record.source_pointers}
         assert source_dbs == {"SAbDab2", "Thera-SAbDab"}
+
+
+class TestStructureSentinelAndPerArmSplit:
+    """
+    The structure columns use their own missing-data sentinel and are split per arm
+    (Gate 7).
+
+    Measured on the real file before this was fixed: 794 of 1,131 therapeutics were
+    recorded as having an experimental structure record when the source says they
+    have none. SPEC S26 scores structure-record availability directly, so the flag
+    was fabricated evidence, not a cosmetic error.
+    """
+
+    def test_none_sentinel_means_no_structure_not_a_structure_named_none(self, tmp_path):
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row()])
+        row = next(iter(parse_thera_sabdab_csv(csv_path)))
+        arm = row.arms[0]
+        assert arm.structures_100_si == []
+        assert arm.has_structure_record is False
+
+    def test_real_structure_ids_are_split_on_slash(self, tmp_path):
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": "1n8z:BA/6bi0:HL:IM"})])
+        arm = next(iter(parse_thera_sabdab_csv(csv_path))).arms[0]
+        assert arm.structures_100_si == ["1n8z:BA", "6bi0:HL:IM"]
+        assert arm.has_structure_record is True
+
+    def test_bispecific_arms_do_not_share_each_others_structures(self, tmp_path):
+        """A structure solved for arm 2 is not evidence about arm 1."""
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "HeavySequence(ifbispec)": OTHER_VH,
+            "LightSequence(ifbispec)": OTHER_VL,
+            "100% SI Structure": "None;8z8v:B",
+            "99% SI Structure": "None;None",
+            "95-98% SI Structure": "None;None",
+        })])
+        arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
+        first, second = arms[0], arms[1]
+        assert first.structures_100_si == []
+        assert first.has_structure_record is False
+        assert second.structures_100_si == ["8z8v:B"]
+        assert second.has_structure_record is True
+
+    def test_unmappable_column_is_unknown_rather_than_misattributed(self, tmp_path):
+        """Under schema drift the arm mapping is unknown -- never guessed.
+
+        A wrong arm is worse than an absent one: it would credit one specificity
+        with another's experimental record.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "HeavySequence(ifbispec)": OTHER_VH,
+            "LightSequence(ifbispec)": OTHER_VL,
+            # Two arms, three tokens -- the source shape this parser expects is broken.
+            "100% SI Structure": "1n8z:BA;8z8v:B;7ah1:AA",
+            "99% SI Structure": "None;None",
+            "95-98% SI Structure": "None;None",
+        })])
+        arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
+        for arm in arms:
+            assert arm.structures_100_si is None
+        # Still False, not None: the other two tiers mapped cleanly and say "none".
+        assert arms[0].has_structure_record is False
+
+    def test_unknown_is_never_coerced_to_false(self, tmp_path):
+        """When every tier is unmappable the answer is None, not 'no structure'."""
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "HeavySequence(ifbispec)": OTHER_VH,
+            "LightSequence(ifbispec)": OTHER_VL,
+            "100% SI Structure": "a;b;c",
+            "99% SI Structure": "a;b;c",
+            "95-98% SI Structure": "a;b;c",
+        })])
+        arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
+        assert all(arm.has_structure_record is None for arm in arms)
+
+    def test_pair_record_carries_this_arms_structure_status(self, tmp_path):
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row()])
+        corpus = Corpus()
+        corpus.ingest_thera_sabdab(csv_path)
+
+        heavy = number_sequence(TRASTUZUMAB_VH)
+        light = number_sequence(TRASTUZUMAB_VL)
+        records = corpus.pairs.lookup(heavy.sequence_checksum, light.sequence_checksum)
+        assert len(records) == 1
+        assert records[0].structure_available is False
+        assert records[0].metadata["structure_ids"] == []
