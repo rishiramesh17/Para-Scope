@@ -10,6 +10,11 @@ requires-python = ">=3.11"
 dependencies = [
     "anarcii>=2.0.8",
     "biopython>=1.84",
+    # Gate 6. Ships its reference peptide sets inside the wheel, so window
+    # coverage never calls out to a network service at scoring time. MIT.
+    # Pulls scipy/pandas/tqdm transitively; only the in-memory exact-match
+    # lookup is used here, not the scipy-backed nearest-peptide search.
+    "promb>=1.0.2",
 ]
 
 [project.optional-dependencies]

@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-07-30, against commit on `main`, 150 tests passing.
+Last verified: 2026-07-30, against commit on `main`, 180 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–5 are complete.
+artifact, not a time box. Gates 0–6 are complete.
 
 ---
 
@@ -22,8 +22,8 @@ artifact, not a time box. Gates 0–5 are complete.
 | 3 | Two-stage approximate search | ✅ | `reports/TWO_STAGE_SEARCH.md` |
 | 4 | Deterministic feature engine | ✅ | `src/antigens/features.py` |
 | 5 | Motif observation engine | ✅ | `src/antigens/motifs.py` |
-| **6** | **Human-repertoire naturalness** | **next — unblocked, not built** | — |
-| 7 | Therapeutic-precedent profile | ready, no new data needed | SPEC §26 |
+| 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
+| **7** | **Therapeutic-precedent profile** | **next — ready, no new data needed** | SPEC §26 |
 | 8 | Pairing precedent | ready — PairIndex works, 12,032 observed pairs | SPEC §35 |
 | 9 | Empirical reference distributions | ready | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
@@ -34,7 +34,10 @@ Corpus under test: 46,627 components, 28,835 approximate-eligible,
 
 ---
 
-## Gate 6 — human-repertoire naturalness
+## Gate 6 — human repertoire window coverage ✅
+
+Built 2026-07-30. Full detail in `reports/GATE6_WINDOW_COVERAGE.md`; what follows is
+what a future session needs to not re-derive.
 
 ### BioPhi was rejected, and is not coming back
 
@@ -42,47 +45,64 @@ BioPhi requires Python 3.9, conda, and a 2020-vintage ANARCII. The project runs
 Python 3.13 with `anarcii>=2.0.8`. This is an unresolvable stack collision, not an
 integration difficulty. Do not re-litigate it.
 
-### The replacement (validated, not yet installed)
+**But note what shipped:** `promb` is authored by BioPhi's author (David Prihoda) and
+reproduces BioPhi's OASis score. The same published metric (Prihoda et al., *mAbs*
+2022), repackaged for a modern stack. MIT licensed, reference data bundled in the
+wheel, zero network calls at scoring time. So the metric was never the problem — the
+distribution was.
 
-A 9-residue sliding-window matcher against human antibody sequences. Score is the
-fraction of query windows observed in real human antibodies. **207 MB, not 22 GB**,
-and installs on the existing Python without downgrading anything in the pipeline.
+### The name: `human_window_coverage`, never "naturalness"
 
-Validated before adoption:
+*(decided 2026-07-30; supersedes this gate's former title)*
 
-| Sequence | Score |
-|---|---|
-| Humanized (trastuzumab) | 0.71 / 0.83 |
-| Mouse | 0.58 |
-| **Llama (VHH)** | **0.685** |
+The roadmap previously called this "naturalness" and flagged the llama result as the
+reason that word is unsafe. The corpus-wide run makes the case far harder than four
+sequences did:
 
-Humanized > mouse is the correct ordering; had it inverted, the metric would be junk.
+| Component | n | p50 coverage |
+|---|---:|---:|
+| VH | 5,473 | 0.429 |
+| **VHH (camelid)** | 1,168 | **0.547** |
+| VL-kappa | 4,089 | 0.445 |
 
-**The llama result is the load-bearing limitation.** At 0.685 it is statistically
-indistinguishable from the humanized 0.705. This metric therefore **cannot measure
-"how human" a sequence is.** It measures only how many of its 9-residue windows
-appear in human antibodies. It must never be surfaced, named, or documented in a way
-that implies immunogenicity, safety, or humanization quality — that would violate
-`CLAUDE.md` prohibited claims.
+**Camelid VHH have a higher median coverage than VH.** Not merely overlapping —
+higher, with a tighter distribution. Any name implying humanness would rank llama
+single domains above the median variable domain.
 
-Two corrections to the source document, recorded so they are not reintroduced:
-a separate Python 3.11 worker process is unnecessary — skip it; and the document's
-example score of 77.7% was illustrative, not a target (the real figure was 70.5%).
+The term is **Human Repertoire Window Coverage**: it states the comparison performed,
+not a conclusion drawn from it, matching `Observed Repertoire Precedent` and
+`Database-Relative Novelty`. The reference set's id and version are fields on the
+result, so swapping reference sets later does not force a rename — the same principle
+as the Gate 11 index scope decision. A test asserts no public name in the module
+contains "humanness", "naturalness", or "immunogenic".
 
-### State at time of writing
+### What the metric cannot do — do not rediscover these
 
-Never implemented. The prior session ended on `"I'm implementing it now"` and then
-diverted. `promb` is **not** in the venv, `pyproject.toml` still lists only `anarcii`
-and `biopython`, and no naturalness module exists. Re-verify the package name and
-install before building.
+- **CDR-H3: uninformative.** All 28 scoreable CDR-H3s scored exactly 0.000. CDR-H3 is
+  junctionally generated, so its 9-mers appear in no set built from peptides shared
+  across ≥10% of subjects. Expected biology, not a defect — but a low CDR-H3 coverage
+  is not a finding, and Gate 9 must exclude it rather than build a percentile on it.
+- **Frameworks: saturated.** FR-L3's p50, p75 and p95 are all 1.000; FR-H3's p75 and
+  p95 are 1.000. A saturated distribution cannot discriminate.
+- **Only 40.3% of the corpus scores at all** — 41.2% `insufficient_evidence`, 18.4%
+  `not_applicable`. Most CDRs are shorter than the 9-residue window. This is why
+  status reporting is mandatory: the majority of components produce no value and
+  none of them may be recorded as a zero.
 
-### Required behavior
+### Two library behaviours deliberately not inherited
 
-The naturalness slot must exist in the profile from the start, returning an explicit
-`database_unavailable` status until data is wired in. It must **never** default to a
-neutral or midpoint value — a neutral number reads as "average humanness" when it
-actually means "we did not look." That is the `missing evidence is not zero evidence`
-constraint applied directly.
+`promb` raises `ZeroDivisionError` for any sequence shorter than the window (i.e. for
+most CDRs), and **silently scores sequences containing non-standard residues** — an
+`X` returns 0.47 rather than an error, because windows spanning it match nothing and
+deflate the fraction. The second is the dangerous one: it fails silently in the
+direction that produces a confident wrong answer. Handled as `NOT_APPLICABLE` and
+`UNSUPPORTED_COMPONENT` respectively, input never modified.
+
+### Supporting change
+
+`EvidenceStatus` now exists in `models.py` — the seven `CLAUDE.md` statuses plus
+`AVAILABLE`, per SPEC §22. Before this gate they were ad-hoc string prefixes in parser
+skip reasons. Every dimension added from here on should use it.
 
 ---
 
@@ -202,6 +222,13 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
 
 ## Known-uncalibrated items carried into Gate 9
 
+- **`MINIMUM_WINDOWS_FOR_FRACTION = 20` is a provisional default**, not a calibrated
+  threshold — same standing as the 0.70 coverage floor. It decides the status of
+  41.2% of the corpus, so it is a consequential guess.
+- **Window coverage needs exclusion rules, not percentiles, for CDR-H3 and the
+  saturated frameworks.** See Gate 6 above.
+- **Short components still lack a length-matched empirical null** (SPEC §21). Raw
+  window counts are returned under every status so Gate 9 can build one.
 - **Reference-population bias.** SAbDab2 is structure-derived — these are antibodies
   someone chose to crystallize. That population is not representative of natural
   repertoire. Layer 2 percentiles are percentiles *of solved structures*. Defensible

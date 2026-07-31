@@ -50,6 +50,29 @@ class ComponentRelationship(str, Enum):
     EXCLUDED = "excluded"  # Never compare these
 
 
+class EvidenceStatus(str, Enum):
+    """
+    Outcome of attempting to gather one evidence dimension (SPEC §22).
+
+    Exists so that "we looked and found nothing", "this does not apply here", and
+    "we could not look" are three different statements rather than three zeroes.
+    SPEC §22: *do not force inapplicable dimensions into a zero*; CLAUDE.md:
+    *missing evidence is not zero evidence*. Any dimension carrying a status other
+    than AVAILABLE must leave its value unset rather than defaulting to 0, to a
+    midpoint, or to a neutral -- a failed database call must never lower a
+    biological score.
+    """
+
+    AVAILABLE = "available"
+    NOT_FOUND = "not_found"
+    NOT_APPLICABLE = "not_applicable"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    ANALYSIS_FAILED = "analysis_failed"
+    DATABASE_UNAVAILABLE = "database_unavailable"
+    ACCESS_RESTRICTED = "access_restricted"
+    UNSUPPORTED_COMPONENT = "unsupported_component"
+
+
 class EvidenceClass(str, Enum):
     """Evidence classes from SPEC §17. Must be reported separately, never combined."""
     GERMLINE = "germline"

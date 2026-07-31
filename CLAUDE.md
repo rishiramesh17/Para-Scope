@@ -56,6 +56,7 @@ Use these exact terms in code, identifiers, schemas, comments, and user-facing c
 | Observed Repertoire Precedent | "natural precedent" |
 | Database-Relative Novelty | unqualified "novelty" |
 | Whole-Construct Comparative Evidence Index | binding / success / functional / safety / efficacy / clinical / manufacturability score |
+| Human Repertoire Window Coverage — a count of 9-mer windows found in a reference set | "humanness", "naturalness", humanization or immunogenicity score |
 
 ## Prohibited claims
 
@@ -103,30 +104,34 @@ estimating, or claiming a gate is incomplete.** It is kept current because updat
 it is part of a gate's definition of done — see the checklist at the end of that
 file. If it disagrees with your recollection, the file is right.
 
-Work proceeds in numbered gates. Gates 0–5 are complete; Gate 6 is next.
+Work proceeds in numbered gates. Gates 0–6 are complete; Gate 7 is next.
 
 ## Architecture
 
 Python 3.13, `src/` layout, package `antigens` (repo is named Para-Scope; the
 package name has not been renamed). Dependencies are deliberately few: `anarcii`
-for numbering, `biopython` for alignment and residue chemistry.
+for numbering, `biopython` for alignment and residue chemistry, `promb` for the
+bundled human repertoire peptide reference set (MIT; data ships inside the wheel,
+so nothing is fetched at scoring time).
 
 ```
 src/antigens/
-  models.py        Component/evidence dataclasses and enums
-  numbering.py     ANARCII wrapper, IMGT coordinates, region extraction
-  corpus.py        In-memory corpus, ingestion, CORPUS_SCHEMA_VERSION
-  persistence.py   Snapshot save/load, CACHE_FORMAT_VERSION, StaleSnapshotError
-  features.py      Deterministic sequence features (Gate 4)
-  motifs.py        Motif observations in IMGT coordinates (Gate 5)
-  indexes/         exact, positional, pair, approximate, shortlist
-  parsers/         sabdab2, thera_sabdab
+  models.py            Component/evidence dataclasses, EvidenceStatus, enums
+  numbering.py         ANARCII wrapper, IMGT coordinates, region extraction
+  corpus.py            In-memory corpus, ingestion, CORPUS_SCHEMA_VERSION
+  persistence.py       Snapshot save/load, CACHE_FORMAT_VERSION, StaleSnapshotError
+  features.py          Deterministic sequence features (Gate 4)
+  motifs.py            Motif observations in IMGT coordinates (Gate 5)
+  window_coverage.py   Human repertoire 9-mer window coverage (Gate 6)
+  indexes/             exact, positional, pair, approximate, shortlist
+  parsers/             sabdab2, thera_sabdab
 ```
 
 Two invariants that cut across the code and are easy to break:
 
 - **Versioned constants gate reproducibility.** `CORPUS_SCHEMA_VERSION`,
-  `CACHE_FORMAT_VERSION`, `ALIGNMENT_SCORING_VERSION`, `FEATURE_ENGINE_VERSION`.
+  `CACHE_FORMAT_VERSION`, `ALIGNMENT_SCORING_VERSION`, `FEATURE_ENGINE_VERSION`,
+  `MOTIF_RULESET_VERSION`, `WINDOW_COVERAGE_VERSION`.
   Adding state to `Corpus` requires bumping its schema version, or old snapshots
   deserialize silently missing attributes and fail far from the cause.
 - **`data/` is gitignored and regenerable.** Corpus snapshots and the numbering
@@ -136,11 +141,12 @@ Two invariants that cut across the code and are easy to break:
 ## Development commands
 
 ```bash
-.venv/bin/python -m pytest              # full suite (~30 s, 150 tests)
+.venv/bin/python -m pytest              # full suite (~33 s, 180 tests)
 .venv/bin/python -m pytest -q tests/    # unit only; tests/integration needs the corpus
 
 # Corpus rebuild (required after a fresh clone; ~8.5 min cold, ~7 s cached)
 .venv/bin/python scripts/build_v2_corpus_cache.py       # SAbDab2
 .venv/bin/python scripts/build_combined_corpus_cache.py  # + Thera-SAbDab
 .venv/bin/python scripts/benchmark_two_stage_search.py   # shortlist recall/latency
+.venv/bin/python scripts/measure_window_coverage.py      # Gate 6 corpus distributions
 ```
