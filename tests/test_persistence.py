@@ -16,7 +16,7 @@ import pytest
 
 import antigens.corpus as corpus_module
 from antigens.corpus import Corpus, IngestStats, build_sabdab2_snapshot
-from antigens.models import ComponentType
+from antigens.models import ComponentType, SourceSnapshot
 from antigens.numbering import number_sequence, number_sequences
 from antigens.parsers.sabdab2 import REQUIRED_COLUMNS
 from antigens.persistence import (
@@ -244,3 +244,49 @@ class TestCorpusSnapshotPersistence:
         snapshot_b = build_sabdab2_snapshot(csv_path_b)
 
         assert not snapshot_matches_source(manifest, snapshot_b)
+
+
+class TestSourceProvenanceRoundTrip:
+    """
+    A stored snapshot must be answerable about its own provenance.
+
+    `_snapshot_to_dict` previously persisted four of SourceSnapshot's eight fields
+    and silently dropped the rest. license_id was the consequential loss: SPEC
+    §13/§14 require a source's licence to travel with evidence derived from it,
+    both ingested sources currently carry `unspecified`, and a redistribution
+    question cannot be answered by re-reading source files that may have moved or
+    changed. These tests fail if any field is dropped again.
+    """
+
+    def _saved_manifest(self, tmp_path):
+        csv_path = tmp_path / "ab_split.csv"
+        _write_ab_split_csv(csv_path, [_base_row()])
+        corpus = Corpus()
+        stats = corpus.ingest_sabdab2(csv_path)
+        snapshot = build_sabdab2_snapshot(csv_path)
+        save_corpus_snapshot(corpus, stats, [snapshot], tmp_path / "corpus.pkl")
+        _corpus, _stats, manifest = load_corpus_snapshot(tmp_path / "corpus.pkl")
+        return manifest, snapshot
+
+    def test_every_source_snapshot_field_survives_a_round_trip(self, tmp_path):
+        manifest, snapshot = self._saved_manifest(tmp_path)
+        stored = manifest.source_snapshots[0]
+        for field_name in (
+            "source_name", "snapshot_id", "retrieved_at", "license_id",
+            "raw_checksum", "record_count", "parser_version", "schema_version",
+        ):
+            assert field_name in stored, f"{field_name} dropped at save time"
+            assert stored[field_name] == getattr(snapshot, field_name)
+
+    def test_license_is_recoverable_from_a_loaded_snapshot(self, tmp_path):
+        """The specific field whose loss motivated this test class."""
+        manifest, snapshot = self._saved_manifest(tmp_path)
+        assert manifest.source_snapshots[0]["license_id"] == snapshot.license_id
+
+    def test_stored_dict_covers_all_dataclass_fields(self, tmp_path):
+        """Adding a field to SourceSnapshot must not silently bypass persistence."""
+        from dataclasses import fields
+
+        manifest, _snapshot = self._saved_manifest(tmp_path)
+        declared = {f.name for f in fields(SourceSnapshot)}
+        assert declared == set(manifest.source_snapshots[0])

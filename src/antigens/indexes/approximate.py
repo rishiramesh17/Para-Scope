@@ -159,7 +159,6 @@ class ApproximateIndex:
             )
         self._sequences[component_type][record_id] = sequence
         self.shortlist_index.add(component_type, record_id, sequence)
-        self.shortlist_index.add(component_type, record_id, sequence)
 
     def search(
         self,

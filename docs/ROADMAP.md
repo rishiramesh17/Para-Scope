@@ -24,7 +24,7 @@ artifact, not a time box. Gates 0–6 are complete.
 | 5 | Motif observation engine | ✅ | `src/antigens/motifs.py` |
 | 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
 | **7** | **Therapeutic-precedent profile** | **next — ready, no new data needed** | SPEC §26 |
-| 8 | Pairing precedent | ready — PairIndex works, 12,032 observed pairs | SPEC §35 |
+| 8 | Pairing precedent | ready — PairIndex works; see pair-count note below | SPEC §35 |
 | 9 | Empirical reference distributions | ready | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | 11 | Final profile assembly | — | SPEC §37 |
@@ -242,10 +242,29 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
 - **12 queries per type** establishes the shape of the problem, not a tight confidence
   interval on 0.958.
 
+## Gate 8 — the pair count is two different numbers
+
+*(resolved 2026-07-31)*
+
+This file previously said "12,032 observed pairs". Measured on the rebuilt corpus:
+
+- **12,032** total `PairRecord` entries — what `IngestStats.observed_pairs` counts
+- **5,686** unique `(heavy_checksum, light_checksum)` keys — what `len(PairIndex)` returns
+
+Both are correct; they count different things, at ~2.1 records per unique pair
+because one antibody appears across multiple structures and sources. **Gate 8 must
+use 5,686**, or the same pair is counted up to a dozen times as independent
+evidence — the deduplicate-before-counting rule (SPEC §15) applied directly. The
+extra records are still useful as independent-observation *support*, but they are
+not additional pairs.
+
 ## Gate 7 constraints
 
-- **Thera-SAbDab license is `unspecified`** — flagged in `build_thera_sabdab_snapshot`.
-  Blocks public deployment and redistribution; does not block local analysis.
+- **Both sources carry `license_id = "unspecified"`** — Thera-SAbDab *and* SAbDab2.
+  Only Thera-SAbDab was previously flagged here; SAbDab2's licence was invisible
+  because `_snapshot_to_dict` was discarding the field at save time (fixed
+  2026-07-31, `CACHE_FORMAT_VERSION` 1.2.0). Blocks public deployment and
+  redistribution; does not block local analysis.
 - **Clinical stage and development status stay metadata.** An antibody reaching Phase 3
   transfers no property to a sequence resembling it. These must never become a success
   or failure label.

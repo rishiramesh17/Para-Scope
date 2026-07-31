@@ -28,7 +28,9 @@ from antigens.corpus import CORPUS_SCHEMA_VERSION, Corpus, IngestStats
 from antigens.models import SourceSnapshot
 from antigens.numbering import NumberedComponent, get_anarcii_version
 
-CACHE_FORMAT_VERSION = "1.1.0"
+# 1.2.0 -- source_snapshots now persist all eight SourceSnapshot fields; earlier
+#          formats dropped license_id, snapshot_id, retrieved_at, schema_version.
+CACHE_FORMAT_VERSION = "1.2.0"
 
 
 class StaleSnapshotError(RuntimeError):
@@ -89,11 +91,27 @@ def _stats_to_dict(stats: IngestStats) -> dict:
 
 
 def _snapshot_to_dict(snapshot: SourceSnapshot) -> dict:
+    """
+    Persist every SourceSnapshot field, not a subset.
+
+    This previously stored four fields and dropped license_id, snapshot_id,
+    retrieved_at, and schema_version. The licensing omission was the serious one:
+    SPEC §13/§14 require a source's licence to travel with the evidence derived
+    from it, and one ingested source carries an `unspecified` licence that blocks
+    redistribution -- so the single fact most needed to audit a stored corpus was
+    the one being discarded at save time. A snapshot must be answerable about its
+    own provenance without re-deriving it from source files that may have moved,
+    changed, or gone away.
+    """
     return {
         "source_name": snapshot.source_name,
+        "snapshot_id": snapshot.snapshot_id,
+        "retrieved_at": snapshot.retrieved_at,
+        "license_id": snapshot.license_id,
         "raw_checksum": snapshot.raw_checksum,
-        "parser_version": snapshot.parser_version,
         "record_count": snapshot.record_count,
+        "parser_version": snapshot.parser_version,
+        "schema_version": snapshot.schema_version,
     }
 
 
