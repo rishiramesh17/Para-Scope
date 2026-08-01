@@ -104,8 +104,8 @@ estimating, or claiming a gate is incomplete.** It is kept current because updat
 it is part of a gate's definition of done — see the checklist at the end of that
 file. If it disagrees with your recollection, the file is right.
 
-Work proceeds in numbered gates. Gates 0–7 are complete; Gate 9 is next (it now
-blocks the composite scores of both Gate 7 and Gate 8).
+Work proceeds in numbered gates. Gates 0–8 are complete; Gate 9 is next (it now
+blocks calibrated terms in both Gate 7 and Gate 8).
 
 ## Architecture
 
@@ -125,6 +125,7 @@ src/antigens/
   motifs.py            Motif observations in IMGT coordinates (Gate 5)
   window_coverage.py   Human repertoire 9-mer window coverage (Gate 6)
   therapeutic_precedent.py  Therapeutic precedent evidence, SPEC §26 (Gate 7)
+  pairing_precedent.py Observed heavy-light pairing, SPEC §35.1 (Gate 8)
   indexes/             exact, positional, pair, approximate, shortlist
   parsers/             sabdab2, thera_sabdab
 ```
@@ -134,7 +135,7 @@ Two invariants that cut across the code and are easy to break:
 - **Versioned constants gate reproducibility.** `CORPUS_SCHEMA_VERSION`,
   `CACHE_FORMAT_VERSION`, `ALIGNMENT_SCORING_VERSION`, `FEATURE_ENGINE_VERSION`,
   `MOTIF_RULESET_VERSION`, `WINDOW_COVERAGE_VERSION`,
-  `THERAPEUTIC_PRECEDENT_VERSION`.
+  `THERAPEUTIC_PRECEDENT_VERSION`, `PAIRING_PRECEDENT_VERSION`.
   Adding state to `Corpus` requires bumping its schema version, or old snapshots
   deserialize silently missing attributes and fail far from the cause.
 - **`data/` is gitignored and regenerable.** Corpus snapshots and the numbering
@@ -144,7 +145,7 @@ Two invariants that cut across the code and are easy to break:
 ## Development commands
 
 ```bash
-.venv/bin/python -m pytest              # full suite (~43 s, 254 tests)
+.venv/bin/python -m pytest              # full suite (~66 s, 293 tests)
 .venv/bin/python -m pytest -q tests/    # unit only; tests/integration needs the corpus
 
 # Corpus rebuild (required after a fresh clone; ~8.5 min cold, ~7 s cached)

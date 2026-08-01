@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-07-31, against commit on `main`, 254 tests passing.
+Last verified: 2026-08-01, against commit on `main`, 293 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–7 are complete.
+artifact, not a time box. Gates 0–8 are complete.
 
 ---
 
@@ -24,8 +24,8 @@ artifact, not a time box. Gates 0–7 are complete.
 | 5 | Motif observation engine | ✅ | `src/antigens/motifs.py` |
 | 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
 | 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
-| 8 | Pairing precedent | ready — PairIndex works; see pair-count note below | SPEC §35 |
-| **9** | **Empirical reference distributions** | **ready — now blocks two gates' composites** | SPEC §19 Layers 2–4 |
+| 8 | Pairing precedent | ✅ | `reports/GATE8_PAIRING_PRECEDENT.md` |
+| **9** | **Empirical reference distributions** | **ready — blocks calibrated terms in Gates 7 and 8** | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
@@ -243,9 +243,65 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
 - **12 queries per type** establishes the shape of the problem, not a tight confidence
   interval on 0.958.
 
-## Gate 8 — the pair count is two different numbers
+## Gate 8 — observed pairing precedent ✅
 
-*(resolved 2026-07-31)*
+Built 2026-08-01. Full detail in `reports/GATE8_PAIRING_PRECEDENT.md`; what
+follows is what a future session must not re-derive.
+
+### Findings that change later gates
+
+- **54% of observed pairs rest on a single source record** (3,060 of 5,686). The
+  2.12 records-per-pair average is skewed by a small deep tail — 98 pairs have
+  more than 8. Any weighting by corroboration depth is weighting a long tail, not
+  a typical case. **Gate 9 must know this before treating observation count as a
+  calibration input.**
+- **The two sources are almost disjoint: 4,562 SAbDab2-only, 1,122
+  Thera-SAbDab-only, and 2 in both.** They are not overlapping views of the same
+  evidence. Dropping either loses most of its contribution rather than a
+  duplicated subset, and a dedup rule assuming cross-source mirroring has almost
+  nothing to merge.
+- Structure support across unique pairs: 4,852 backed, 834 stated absent, 0
+  unknown.
+
+### SPEC §35 defines no weights, so no composite exists
+
+Unlike §26, §35 lists eight "provisional pair-match dimensions" with no formula.
+`PairingPrecedentResult` therefore has **no `score` field at all** — nothing is
+withheld because nothing is defined. Inventing weights would fabricate the spec.
+Five dimensions are computable; three are blocked: germline-pair precedent (no
+germline data), combined CDR-pattern similarity (needs the §21 length-matched
+null), and format relevance (Gate 10.5).
+
+**One germline reference set unblocks two gates** — Gate 9's calibration and this
+dimension's germline-pair term. **One Gate 10.5 unblocks a dimension in both §26
+and §35.**
+
+### Decisions made here
+
+- **Joint coverage is `min(heavy_coverage, light_coverage)`, not the mean.** A
+  pair cannot be better covered than its weaker chain. **Provisional** — the
+  choice of `min` is not calibrated.
+- **A pair's relationship is the worse of its two chains'.** A kappa/lambda
+  substitution downgrades the whole pair, so an exact heavy cannot carry a
+  related-class light into same-class evidence.
+- **No light chain returns `not_applicable`, never `not_found`.** A single-domain
+  construct has no light chain by design; reporting a missing result would make a
+  deliberate architecture indistinguishable from an unobserved pair.
+
+### The test that matters, and the mistake in writing it
+
+`test_independent_heavy_and_light_hits_do_not_make_a_pair`. The first version
+asserted an empty result and failed — correctly. Given a corpus of
+`Alpha(h_A, l_A)` and `Beta(h_B, l_B)`, querying `h_A` with `l_B` legitimately
+returns *both* real pairs, because each half-matches the query. The invariant is
+not "nothing is found"; it is that the fabricated `(h_A, l_B)` combination never
+appears. A companion test asserts the general form — every emitted pair must
+exist in the index — which fails for any manufacturing route, not just the
+anticipated one.
+
+## The pair count is two different numbers
+
+*(resolved 2026-07-31, confirmed by measurement 2026-08-01)*
 
 This file previously said "12,032 observed pairs". Measured on the rebuilt corpus:
 
