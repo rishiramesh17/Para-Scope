@@ -470,9 +470,20 @@ germline baseline discussed above.
 
 ## Minor leftovers
 
-- Exhaustive search costs ~12 s per full profile — a deliberate correctness-over-speed
-  choice. The honest lever, if interactive latency matters, is opting whole domains
-  into shortlisting (24.7× on VH) while surfacing `shortlisted` in the output.
+- Exhaustive search costs ~12 s **per search**, not per profile — a deliberate
+  correctness-over-speed choice. The honest lever, if interactive latency matters, is
+  opting whole domains into shortlisting (24.7× on VH) while surfacing `shortlisted`
+  in the output.
+
+  **Each dimension currently runs its own searches**, so a full profile repeats them:
+  Gate 7 searches the VH, Gate 8 searches the same VH again plus the VL, and Gate 11
+  will invoke both. Nothing is wrong — every dimension is correct in isolation — but
+  the same alignment is paid for several times.
+
+  Deliberately *not* fixed now, and not a trap for Gate 11: the fix is additive, an
+  optional "hits already computed" argument on each `compute_*` function, so no
+  existing signature has to change and nothing has to be decided in advance. Worth
+  doing when profile assembly makes the cost visible, not before.
 - 1,375 skipped rows and 72 numbering failures inherited from Phase 1a have never been
   individually reviewed.
 - Repo is `Para-Scope`; Python package is `antigens`. Renaming gets more annoying each
