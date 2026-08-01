@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-07-31, against commit on `main`, 222 tests passing.
+Last verified: 2026-07-31, against commit on `main`, 242 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–7 are complete.
@@ -27,6 +27,7 @@ artifact, not a time box. Gates 0–7 are complete.
 | 8 | Pairing precedent | ready — PairIndex works; see pair-count note below | SPEC §35 |
 | **9** | **Empirical reference distributions** | **ready — now blocks two gates' composites** | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
+| **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
 
 Corpus under test: 46,627 components, 28,835 approximate-eligible,
@@ -258,7 +259,29 @@ evidence — the deduplicate-before-counting rule (SPEC §15) applied directly. 
 extra records are still useful as independent-observation *support*, but they are
 not additional pairs.
 
-## Gate 7 — therapeutic precedent ✅
+### The four levels evidence attaches to — settle this before writing Gate 8
+
+Gate 7 built a three-level store: **therapeutic entity** (the drug or programme)
+→ **arm** (one binding specificity) → **sequence component** (VH, VL, CDR,
+framework). Evidence attaches at the level it actually supports and never
+propagates up or sideways — that rule is what fixed the bispecific defect where
+each arm claimed the other's structures.
+
+Gate 8 needs a fourth level those three do not express: the **source record**.
+Pairing evidence is defined by co-occurrence *within a single source record*
+(CLAUDE.md), so the record is the unit that licenses a pairing claim, and it is
+not derivable from the entity/arm/component hierarchy. Two chains can both belong
+to the same therapeutic entity and still have no source record linking them.
+
+Two consequences, both easy to get wrong and expensive to unwind later:
+
+- **An arm is not a pair.** 45 arms in Thera-SAbDab are heavy-only — every
+  single-domain therapeutic among them. They are legitimate arms carrying real
+  metadata, and they are zero evidence about pairing. A Gate 8 count that walks
+  arms rather than source-linked chain pairs will silently include them.
+- **Entity-level identity does not license a pairing claim.** Joining a heavy
+  chain and a light chain because the same drug name appears on both is exactly
+  the synthesized pair CLAUDE.md prohibits. The link must come from the record.
 
 Built 2026-07-31. Full detail in `reports/GATE7_THERAPEUTIC_PRECEDENT.md`; what
 follows is what a future session must not re-derive.
@@ -276,8 +299,21 @@ follows is what a future session must not re-derive.
   OR-ed all three columns and flagged both arms alike. Under schema drift the column
   now resolves to **unknown**, never to a guessed arm.
 
+- **A blank structure cell asserted that no structure exists** *(found in review,
+  parser 1.2.0)*. A third missing-data shape: an empty cell returned the same value
+  as the explicit `None` sentinel, so `has_structure_record` answered `False` and
+  SPEC §26's structure term scored 0.0 from a cell containing nothing. Defect 1
+  inverted — absent evidence read as present there, unknown read as absence here.
+  Blank now resolves to **unknown**. No impact on the current file (0 blanks before
+  and after; the 337/794 split is unchanged), so this is defensive.
+
 `PairRecord.structure_available` is `Optional[bool]`. **`None` must never be coerced
-to `False`** — parser version 1.1.0, `corpus_schema_version` 5.0.0.
+to `False`** — parser version 1.2.0, `corpus_schema_version` 5.0.0.
+
+Snapshot-specific counts are pinned in
+`tests/integration/test_therapeutic_snapshot_counts.py`, guarded by the source
+SHA-256: a Thera-SAbDab update skips the module with re-measurement instructions
+rather than failing as a code regression.
 
 ### The therapeutic entity store
 
@@ -307,8 +343,39 @@ inside parentheses do not delimit (a combination name fragmented into a bare
 *calibrated* similarity at 0.45 and format relevance at 0.10, and neither term
 exists. The four computable sub-terms are emitted as **raw proportions, never
 weighted** — applying weights to a partial set yields something indistinguishable
-from a composite that merely scored low. Gate 9 supplies the similarity term and
-the composite follows with no recomputation.
+from a composite that merely scored low.
+
+**Gate 9 does not unblock the composite by itself.** It supplies similarity (0.45);
+format relevance (0.10) stays blocked, leaving 0.90 of available weight. Emitting a
+composite over that means dividing by 0.90 — silent renormalization, which this
+project forbids because the result looks complete. An earlier draft of the Gate 7
+report said the composite "follows" from Gate 9 alone; it does not, and that
+sentence has been corrected rather than left for a future session to act on.
+
+**Format relevance is unowned and is not Gate 9 work.** It needs the candidate's
+declared construct format — which the submission schema does not collect from the
+user at all, an input-contract change — plus a controlled vocabulary over a
+120+-value free-text column, which is curation. Neither falls out of building
+reference distributions.
+
+**Resolved 2026-07-31 — Gate 10.5, sequenced before Gate 11.** Format relevance was
+unowned: Gates 8, 9, 10 and 11 between them do not produce it, so "it will get done
+eventually" was not true of it the way it is of the 0.45 similarity term. Left
+unowned, all gates would complete and the composite would ship computed over 0.90
+of its own definition with nothing flagging the gap.
+
+It is scheduled before Gate 11 because Gate 11 is where the composite is actually
+emitted. Landing it first means all six terms exist at assembly time and the
+"publish an incomplete score?" question never arises. It has no dependency on
+pairing, calibration or confidence work, so the placement is free — it is a
+submission-schema field plus a curation pass, and it can move earlier if
+convenient.
+
+**If that sequencing ever slips**, the fallback is already specified and must not be
+reinvented: CLAUDE.md's coverage contract (`coverage_scope`, `components_present`,
+`components_missing`, `weight_set_version`) is what an incomplete composite has to
+declare. What stays prohibited in every case is dropping the term and renormalizing
+over the remaining 0.90 without saying so.
 
 ### Carried into later gates
 

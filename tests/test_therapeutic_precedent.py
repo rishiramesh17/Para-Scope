@@ -268,7 +268,7 @@ class TestCompositeScoreIsWithheld:
         }
         assert all(reason for reason in result.blocked_terms.values())
 
-    def test_computable_terms_are_reported_so_gate_9_need_only_add_similarity(self, tmp_path):
+    def test_the_four_computable_terms_are_reported_raw(self, tmp_path):
         corpus = _corpus(tmp_path, [_row()])
         result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
 
@@ -280,6 +280,28 @@ class TestCompositeScoreIsWithheld:
         }
         assert result.computable_terms["coverage"] == 1.0
         assert result.computable_terms["exact_component_class_confirmation"] == 1.0
+
+    def test_gate_9_alone_does_not_unblock_the_composite(self, tmp_path):
+        """Similarity is 0.45 of SPEC S26; format relevance is a further 0.10.
+
+        This test exists because an earlier version of it was named
+        "..._so_gate_9_need_only_add_similarity", which stated the opposite and
+        would have been read by a future session as a settled decision. Filling
+        only the similarity slot leaves 0.90 of available weight, and emitting a
+        composite over that is the silent renormalization CLAUDE.md forbids: the
+        omitted term self-normalizes and the index reads as complete.
+
+        Two terms are blocked, so two must be unblocked -- or the composite must
+        declare the scope it actually covered.
+        """
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
+
+        assert len(result.blocked_terms) == 2
+        assert "format_relevance" in result.blocked_terms
+        # The withheld reason must name both, not just the calibrated one.
+        assert "format relevance" in result.score_reason.lower()
+        assert "calibrated component similarity" in result.score_reason.lower()
 
     def test_weights_are_not_applied_to_the_partial_terms(self, tmp_path):
         """A weighted partial sum would look like a composite that merely scored low."""
@@ -390,6 +412,57 @@ class TestShortComponents:
             corpus, ComponentType.CDR_H3, TRASTUZUMAB_CDR_H3
         )
         assert any("Alignment search not performed" in note for note in result.limitations)
+
+
+class TestMatchCarriesItsSource:
+    """Where a match came from must be readable from the match itself.
+
+    The corpus has always held this on the component record, but reaching it meant
+    taking matched_record_id back to corpus.get(...).source_pointers. That hop is
+    easy to get wrong in a way that fails silently -- the stored source name is
+    "Thera-SAbDab", and filtering on "thera_sabdab" returns zero matches rather
+    than raising. SPEC S13/S14 also require a source's licence to travel with the
+    evidence derived from it, and licence is recorded per source.
+    """
+
+    def test_match_names_the_database_it_was_observed_in(self, tmp_path):
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
+
+        match = result.matches[0]
+        assert match.source_databases == ["Thera-SAbDab"]
+        assert match.source_pointers
+        assert all(
+            database and accession for database, accession in match.source_pointers
+        )
+
+    def test_source_is_not_re_derivable_only_by_a_second_lookup(self, tmp_path):
+        """The whole point: no corpus round-trip needed to answer 'from where?'."""
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
+
+        match = result.matches[0]
+        via_match = set(match.source_pointers)
+        via_corpus = set(corpus.get(match.matched_record_id).source_pointers)
+        assert via_match == via_corpus
+
+    def test_a_component_in_two_sources_reports_both(self, tmp_path):
+        """Provenance is every source the component was seen in, not the first one.
+
+        A VH present in SAbDab2 and reached here through a Thera-SAbDab therapeutic
+        link genuinely has two pointers. Reporting one would misstate the record.
+        """
+        corpus = _corpus(tmp_path, [_row()])
+        record_id = f"{ComponentType.VH.value}::{compute_sequence_checksum(TRASTUZUMAB_VH)}"
+        corpus.get(record_id).source_pointers.append(("SAbDab2", "1n8z_H"))
+
+        result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
+        assert result.matches[0].source_databases == ["SAbDab2", "Thera-SAbDab"]
+
+    def test_engine_version_records_that_provenance_is_present(self, tmp_path):
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
+        assert result.engine_version == THERAPEUTIC_PRECEDENT_VERSION == "1.1.0"
 
 
 class TestProvenanceAndFraming:

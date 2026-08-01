@@ -1,7 +1,11 @@
 # Gate 7 — Therapeutic Precedent (SPEC §26)
 
 Built 2026-07-31. Corpus: 46,627 components, `corpus_schema_version` 5.0.0,
-`CACHE_FORMAT_VERSION` 1.2.0. Suite: **222 tests passing** (was 183).
+`CACHE_FORMAT_VERSION` 1.2.0. Suite: **242 tests passing** (was 183 pre-gate).
+
+*Revised 2026-07-31 after review: a third missing-data sentinel was found (below),
+the "Gate 9 completes the composite" claim was wrong and is corrected, and the
+snapshot-specific counts are now pinned in `tests/integration/`.*
 
 Answers one question: *has this component, or a similar one, been observed in an
 antibody that entered therapeutic development, and what does the curated record
@@ -50,6 +54,31 @@ arm is worse than an absent one.
 
 `structure_available` is now `Optional[bool]`, and `None` must never be coerced to
 `False`.
+
+### 3. A blank structure cell asserted that no structure exists
+
+Found during review, after the two above. Parser **1.2.0**.
+
+There is a third missing-data shape and it means something different again: an
+empty cell. `split_structure_column("")` returned `[[]]` — byte-identical to what
+the explicit `None` sentinel returns — so `has_structure_record` answered `False`
+and SPEC §26's structure term scored **0.0 off a cell containing nothing**.
+
+This is defect 1 inverted. There, an unrecognised sentinel made absent evidence
+read as present; here, an empty value made unknown evidence read as a positive
+statement of absence. Both fabricate a claim the source never made, and both are
+scored. A blank now resolves to *unknown*, which keeps the term out of the profile
+entirely rather than contributing a zero.
+
+An empty token anywhere in a multi-arm value makes the whole column unknown, on
+the same reasoning as schema drift: a half-readable arm mapping cannot be
+distinguished from a complete one, and a wrong arm is worse than an absent one.
+
+**Impact on the current file: none.** This snapshot has no blank structure cells —
+`unknown` is 0 before and after, so the 337/794 split is unchanged. The fix is
+defensive. It is reported because the previous two defects were also invisible
+until a fixture happened to contain the real sentinel, and the unit fixtures still
+cannot see a shape the sample rows do not include.
 
 ---
 
@@ -102,7 +131,7 @@ Fixing the splitting rule removed 3 spurious collisions of two kinds:
 
 ### The dimension (`therapeutic_precedent.py`)
 
-`THERAPEUTIC_PRECEDENT_VERSION = "1.0.0"`, `CALIBRATION_VERSION = "uncalibrated"`.
+`THERAPEUTIC_PRECEDENT_VERSION = "1.1.0"`, `CALIBRATION_VERSION = "uncalibrated"`.
 
 Trastuzumab VH against the real corpus:
 
@@ -125,6 +154,25 @@ Ties at identity 1.000 are the normal case here, not an edge case, so ordering
 breaks ties by name; without that the "top match" could differ between two runs
 over the same snapshot.
 
+### Each match names its own source (engine 1.1.0)
+
+`source_databases` and `source_pointers` are carried on every `TherapeuticMatch`.
+The corpus always held this on the component record, but reaching it meant taking
+`matched_record_id` back through `corpus.get(...).source_pointers` — a hop that
+fails silently when fumbled, since the stored name is `Thera-SAbDab` and filtering
+on a plausible `thera_sabdab` yields zero matches rather than an error. That exact
+mistake produced a false "0 therapeutic-linked hits" while this gate was being
+validated.
+
+Licensing is the sharper reason. SPEC §13/§14 require a source's licence to travel
+with the evidence derived from it, and licence is recorded per `SourceSnapshot`, so
+a displayed match that does not name its source cannot be joined to its terms. Both
+sources are `unspecified` today, so nothing is currently mis-stated; the join stops
+being cosmetic the moment one source is cleared and the other is not.
+
+A component present in both sources reports both pointers — provenance is every
+source it was observed in, not the one that happened to be reached first.
+
 ---
 
 ## The composite score is withheld, deliberately
@@ -134,14 +182,14 @@ over the same snapshot.
 SPEC §26's composite weights **calibrated** component similarity at 0.45 and format
 relevance at 0.10. Neither term exists:
 
-| term | weight | state |
-|---|---:|---|
-| calibrated component similarity | 0.45 | **blocked** — needs Gate 9 (SPEC §19 layers 2–4) |
-| coverage | 0.15 | computable |
-| exact component-class confirmation | 0.15 | computable |
-| format relevance | 0.10 | **blocked** — needs the candidate's declared format and a controlled vocabulary over a free-text column with 120+ values |
-| direct pair / structure support | 0.10 | computable |
-| metadata completeness | 0.05 | computable |
+| term | weight | state | owned by |
+|---|---:|---|---|
+| calibrated component similarity | 0.45 | **blocked** | Gate 9 (SPEC §19 layers 2–4) |
+| coverage | 0.15 | computable | — |
+| exact component-class confirmation | 0.15 | computable | — |
+| format relevance | 0.10 | **blocked** | **no gate yet — see below** |
+| direct pair / structure support | 0.10 | computable | — |
+| metadata completeness | 0.05 | computable | — |
 
 Substituting raw identity into the calibrated slot would publish an uncalibrated
 number under a calibrated formula's name — reproducible, but reproducibly wrong,
@@ -150,8 +198,48 @@ sub-terms are emitted as **raw proportions, not weighted contributions**: applyi
 the weights to a partial set would produce something that looks like a composite
 which merely scored low.
 
-Gate 9 supplies the similarity term and the composite follows, with nothing here
-needing recomputation.
+### Gate 9 does not unblock the composite on its own
+
+An earlier draft of this report closed by saying Gate 9 supplies the similarity
+term and the composite then follows. That was wrong, and wrong in a direction the
+project's rules specifically prohibit.
+
+After Gate 9 lands, format relevance is *still* blocked. The available weight is
+0.90, so emitting a composite means dividing by 0.90 — the silent renormalization
+CLAUDE.md forbids, where an omitted component self-normalizes and the index looks
+complete. A reader cannot tell a full-coverage score from one that quietly dropped
+a tenth of its definition.
+
+**Format relevance is not Gate 9 work and must not be filed there.** It needs two
+inputs Gate 9 does not produce:
+
+1. **The candidate's declared construct format**, which the submission schema does
+   not currently collect from the user at all. That is an input-contract change.
+2. **A controlled vocabulary** over Thera-SAbDab's free-text `Format` column
+   (120+ distinct values). That is curation work, not calibration work.
+
+Neither is a by-product of building empirical reference distributions. Filing this
+under Gate 9 is how it becomes invisible and ships as a renormalized 0.90.
+
+### Resolved — Gate 10.5, before Gate 11
+
+Format relevance now has an owner: **Gate 10.5**, sequenced ahead of Gate 11.
+
+The distinction that made this urgent: the 0.45 similarity term was always going to
+be built, because Gate 9 exists and produces it. Format relevance was not — no
+remaining gate produces it, so it would not have arrived on its own. Every gate
+would have completed and the composite would have shipped over 0.90 of its
+definition with nothing anywhere reporting the shortfall.
+
+Gate 11 is where the composite is emitted, so landing 10.5 first means all six
+terms exist at assembly and no incomplete score is ever published. The placement
+costs nothing — it depends on no other gate, being a submission-schema field plus a
+curation pass.
+
+**Fallback if the sequencing slips**, already specified in CLAUDE.md and not to be
+reinvented: an incomplete composite declares `coverage_scope`, `components_present`,
+`components_missing` and `weight_set_version`. Dropping the term and renormalizing
+over the remaining 0.90 without saying so stays prohibited regardless.
 
 ---
 

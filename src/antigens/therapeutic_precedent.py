@@ -80,7 +80,10 @@ from antigens.numbering import compute_sequence_checksum
 # returned. Stored on every result so a stored profile is never reinterpreted
 # under later rules (SPEC S19).
 #   1.0.0 -- raw measurements + computable sub-terms; composite withheld pending Gate 9
-THERAPEUTIC_PRECEDENT_VERSION = "1.0.0"
+#   1.1.0 -- each match carries its source database(s) and accessions, so provenance
+#            and licence terms travel with displayed evidence (SPEC S13/S14) instead
+#            of needing a second lookup against the corpus
+THERAPEUTIC_PRECEDENT_VERSION = "1.1.0"
 
 # No calibration exists yet (Gate 9). Named rather than left blank so a stored
 # record states which calibration produced it, including when the answer is "none".
@@ -138,6 +141,23 @@ class TherapeuticMatch:
     # not let us determine this, which is not False.
     arm_accessions: list[str] = field(default_factory=list)
     structure_ids: list[str] = field(default_factory=list)
+
+    # Which database(s) this matched component was actually observed in, carried on
+    # the match rather than left to be re-derived from matched_record_id. The
+    # corpus has always held it; a consumer had to take the record id back to
+    # corpus.get(...).source_pointers to reach it, which is a hop that is easy to
+    # get subtly wrong -- the source name is "Thera-SAbDab", and filtering on the
+    # plausible-looking "thera_sabdab" silently yields zero hits rather than an
+    # error.
+    #
+    # It also matters for licensing, not just convenience: SPEC S13/S14 require a
+    # source's licence to travel with the evidence derived from it. Licence is
+    # recorded per SourceSnapshot, so a displayed match that does not name its
+    # source cannot be joined to its terms. Both sources are currently
+    # `unspecified`; the moment one is cleared and the other is not, that join
+    # stops being cosmetic.
+    source_databases: list[str] = field(default_factory=list)
+    source_pointers: list[tuple[str, str]] = field(default_factory=list)
     has_structure_record: Optional[bool] = None
     directly_paired: Optional[bool] = None
     metadata_completeness: float = 0.0
@@ -238,6 +258,14 @@ def _build_match(
     else:
         has_structure = any(per_arm_structure)
 
+    # Verbatim from the component record -- never inferred from the fact that a
+    # therapeutic record exists. A component can be present in SAbDab2 and reached
+    # here through a Thera-SAbDab therapeutic link; both pointers are real and both
+    # are reported.
+    matched_record = corpus.get(record_id)
+    source_pointers = list(matched_record.source_pointers) if matched_record else []
+    source_databases = sorted({database for database, _accession in source_pointers})
+
     return TherapeuticMatch(
         therapeutic_name=therapeutic.therapeutic_name,
         matched_record_id=record_id,
@@ -259,6 +287,8 @@ def _build_match(
         development_status=therapeutic.development_status,
         arm_accessions=[arm.accession for arm in arms],
         structure_ids=structure_ids,
+        source_databases=source_databases,
+        source_pointers=source_pointers,
         has_structure_record=has_structure,
         directly_paired=directly_paired,
         metadata_completeness=therapeutic.metadata_completeness,
@@ -389,7 +419,11 @@ BLOCKED_TERMS = {
     "format_relevance": (
         "requires the candidate's declared construct format and a controlled "
         "vocabulary over Thera-SAbDab's free-text Format column (120+ distinct "
-        "values); each match reports its format verbatim instead"
+        "values); each match reports its format verbatim instead. NOT Gate 9 work "
+        "and unowned: the declared format is an input the submission schema does "
+        "not collect, and the vocabulary is curation, so neither falls out of "
+        "building reference distributions. Gate 9 therefore does not unblock the "
+        "composite by itself -- 0.10 of SPEC S26's weight remains missing"
     ),
 }
 

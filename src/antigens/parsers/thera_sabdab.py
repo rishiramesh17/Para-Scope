@@ -44,6 +44,11 @@ a field SPEC S26 scores directly. Structure columns therefore get their own
 parser rather than sharing the 'na' one; the general sentinel is left alone so
 a legitimate value elsewhere cannot be clobbered by widening it.
 
+A third shape exists and means something different again: a blank cell. It is
+not a sentinel -- it asserts nothing -- so it resolves to *unknown*, never to
+"no structure". The metadata columns already treated blank as missing; the
+structure columns did not, and read it as a positive statement of absence.
+
 Structure links are per arm
 ---------------------------
 Within a structure column, a semicolon separates the primary arm's links from
@@ -67,7 +72,9 @@ from typing import Iterator, Optional
 #   1.1.0 -- structure columns use the 'None' sentinel, not 'na', and are split
 #            per arm. Before this, structure_available was True for every
 #            therapeutic (794 of them falsely).
-PARSER_VERSION = "1.1.0"
+#   1.2.0 -- a blank structure cell resolves to unknown, not to "no structure".
+#            Previously indistinguishable from the 'None' sentinel.
+PARSER_VERSION = "1.2.0"
 
 # Column names copied verbatim from the real downloaded header, including the
 # embedded date-stamp in "Highest_Clin_Trial (Feb '25)". If a future release
@@ -128,6 +135,17 @@ def split_structure_column(value: Optional[str], arm_count: int) -> Optional[lis
 
     tokens = [token.strip() for token in value.split(_ARM_SEPARATOR)]
     if len(tokens) != arm_count:
+        return None
+
+    # An empty token is not the 'None' sentinel and must not be read as one. A
+    # blank cell states nothing; the sentinel states "no structure exists". Before
+    # this check they were indistinguishable -- a blank column yielded [[]], the
+    # same value an explicit 'None' yields, so has_structure_record answered False
+    # and SPEC S26's structure term scored 0.0 off a cell with no content. That is
+    # the 794-record defect inverted: there a missing sentinel was read as evidence
+    # present, here an absent value is read as evidence of absence. Unknown is the
+    # only honest answer, and it keeps the term out of the score entirely.
+    if any(not token for token in tokens):
         return None
 
     per_arm: list[list[str]] = []

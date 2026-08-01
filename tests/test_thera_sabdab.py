@@ -150,6 +150,19 @@ class TestThereSAbDabParser:
         rows = list(parse_thera_sabdab_csv(csv_path))
         assert rows[0].target is None
 
+    @pytest.mark.parametrize("empty_value", ["", "   ", "NA", "nA"])
+    def test_every_empty_shape_reaches_none_not_a_truthy_string(self, tmp_path, empty_value):
+        """Blank, whitespace and case-variant sentinels all mean missing.
+
+        Untested behaviour regresses. The structure columns proved this: they had
+        a sentinel nobody had asserted on, and 794 therapeutics acquired a
+        fabricated experimental-structure flag as a result.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(Target=empty_value)])
+        rows = list(parse_thera_sabdab_csv(csv_path))
+        assert rows[0].target is None
+
     def test_missing_required_column_raises(self, tmp_path):
         csv_path = tmp_path / "bad.csv"
         with open(csv_path, "w", newline="") as f:
@@ -342,6 +355,54 @@ class TestStructureSentinelAndPerArmSplit:
         })])
         arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
         assert all(arm.has_structure_record is None for arm in arms)
+
+    def test_blank_cell_is_unknown_not_a_statement_that_no_structure_exists(self, tmp_path):
+        """A blank column asserts nothing, so it must not answer False.
+
+        This is the 794-record defect inverted. There, a missing sentinel was read
+        as evidence present; here, an empty cell was read as evidence of absence.
+        Both fabricate a fact the source never stated, and this one is scored:
+        has_structure_record False feeds SPEC S26's structure term as 0.0, while
+        None leaves the term out of the profile entirely.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "100% SI Structure": "",
+            "99% SI Structure": "   ",
+            "95-98% SI Structure": "",
+        })])
+        arm = next(iter(parse_thera_sabdab_csv(csv_path))).arms[0]
+
+        assert arm.structures_100_si is None
+        assert arm.structures_99_si is None
+        assert arm.has_structure_record is None
+
+    def test_blank_is_distinguishable_from_the_none_sentinel(self, tmp_path):
+        """The two must not collapse to the same value -- they mean opposite things."""
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": "None"})])
+        stated_absent = next(iter(parse_thera_sabdab_csv(csv_path))).arms[0]
+
+        blank_path = tmp_path / "thera_blank.csv"
+        _write_thera_csv(blank_path, [_base_row(**{"100% SI Structure": ""})])
+        unknown = next(iter(parse_thera_sabdab_csv(blank_path))).arms[0]
+
+        assert stated_absent.structures_100_si == []    # source says: none exists
+        assert unknown.structures_100_si is None        # source says: nothing
+        assert stated_absent.structures_100_si != unknown.structures_100_si
+
+    def test_blank_arm_token_does_not_silently_absolve_the_other_arm(self, tmp_path):
+        """One unreadable arm makes the column's arm mapping unknown, not half-known."""
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "HeavySequence(ifbispec)": OTHER_VH,
+            "LightSequence(ifbispec)": OTHER_VL,
+            "100% SI Structure": "None;",
+            "99% SI Structure": "None;None",
+            "95-98% SI Structure": "None;None",
+        })])
+        arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
+        assert all(arm.structures_100_si is None for arm in arms)
 
     def test_pair_record_carries_this_arms_structure_status(self, tmp_path):
         csv_path = tmp_path / "thera.csv"
