@@ -22,10 +22,17 @@ from pathlib import Path
 
 import pytest
 
-from antigens.parsers.thera_sabdab import PARSER_VERSION
+from antigens.parsers.thera_sabdab import (
+    PARSER_VERSION,
+    is_structure_reference,
+    parse_thera_sabdab_csv,
+)
 from antigens.persistence import load_corpus_snapshot
 
 SNAPSHOT_PATH = Path("data/cache/combined_corpus_snapshot.pkl")
+SOURCE_CSV = Path(
+    "data/snapshots/thera_sabdab/TheraSAbDab_SeqStruc_OnlineDownload.csv"
+)
 
 # The exact Thera-SAbDab download every number below was measured against.
 PINNED_SOURCE = "Thera-SAbDab"
@@ -131,6 +138,54 @@ class TestStructureEvidenceSplit:
             if arm.has_structure_record is None
         )
         assert unknown == 0
+
+
+class TestTheRealFileHasNoUnhandledVocabulary:
+    """The gap the unit fixtures could not see.
+
+    Every structure-column defect so far -- the 'None' sentinel, the per-arm
+    split, the blank cell -- passed 21 hand-written unit tests, because the
+    fixtures contained shapes the real file does not use. Fixtures assert what
+    someone thought to write down; this asserts what the source actually contains.
+    """
+
+    @pytest.mark.skipif(
+        not SOURCE_CSV.exists(),
+        reason="Thera-SAbDab source CSV not present; only the built snapshot is.",
+    )
+    def test_no_row_reports_an_unrecognised_structure_token(self):
+        """A new sentinel in a future release fails here, by name.
+
+        Measured on the 2025-03-18 file: 3,399 values, 679 distinct tokens, and
+        the only non-PDB-shaped ones are 'None' (the sentinel) and one empty token
+        from a double slash in row 1083. Both are handled, so this is 0.
+        """
+        anomalies = {
+            row.therapeutic_name: row.structure_anomalies
+            for row in parse_thera_sabdab_csv(SOURCE_CSV)
+            if row.structure_anomalies
+        }
+        assert anomalies == {}, (
+            f"unrecognised structure tokens in {len(anomalies)} row(s): {anomalies}. "
+            f"The source introduced a spelling this parser does not handle -- "
+            f"decide whether it is a sentinel or an identifier before updating."
+        )
+
+    def test_every_stored_structure_id_is_shaped_like_one(self, therapeutics):
+        """Nothing that reached the corpus as a structure id is a word.
+
+        'None' passing this check is exactly how 794 therapeutics acquired a
+        fabricated experimental-structure flag. Asserted against the built corpus
+        rather than the CSV, so it also covers the ingestion path.
+        """
+        offenders = [
+            ref
+            for t in therapeutics.values()
+            for arm in t.arms
+            for ref in arm.structure_ids
+            if not is_structure_reference(ref)
+        ]
+        assert offenders == []
 
 
 class TestEntityStoreShape:

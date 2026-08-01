@@ -545,6 +545,16 @@ class Corpus:
         all_sequences: list[str] = []
         for row in parse_thera_sabdab_csv(csv_path):
             stats.rows_seen += 1
+            if row.structure_anomalies:
+                # Drift, not a skip: the row is still ingested, but the affected
+                # structure columns resolved to unknown and that must be visible.
+                # A sentinel this parser does not recognise is exactly how 794
+                # therapeutics acquired a fabricated structure flag.
+                stats.warnings.append(
+                    f"{row.therapeutic_name}: unrecognised structure token(s) "
+                    f"{sorted(set(row.structure_anomalies))} -- affected columns "
+                    f"resolved to unknown"
+                )
             if not row.supported:
                 stats.rows_skipped_unsupported += 1
                 stats.warnings.append(f"{row.therapeutic_name}: {row.skip_reason}")

@@ -144,7 +144,7 @@ Two invariants that cut across the code and are easy to break:
 ## Development commands
 
 ```bash
-.venv/bin/python -m pytest              # full suite (~44 s, 242 tests)
+.venv/bin/python -m pytest              # full suite (~43 s, 254 tests)
 .venv/bin/python -m pytest -q tests/    # unit only; tests/integration needs the corpus
 
 # Corpus rebuild (required after a fresh clone; ~8.5 min cold, ~7 s cached)

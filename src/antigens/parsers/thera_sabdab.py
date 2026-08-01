@@ -64,7 +64,8 @@ misattributed -- a wrong arm is worse than an absent one.
 
 import csv
 import hashlib
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -74,7 +75,11 @@ from typing import Iterator, Optional
 #            therapeutic (794 of them falsely).
 #   1.2.0 -- a blank structure cell resolves to unknown, not to "no structure".
 #            Previously indistinguishable from the 'None' sentinel.
-PARSER_VERSION = "1.2.0"
+#   1.3.0 -- structure tokens must be shaped like PDB references. Catches an
+#            unrecognised sentinel by the shape of the output rather than by
+#            enumerating known bad inputs, which is what the previous three
+#            sentinel fixes each had to do after the fact.
+PARSER_VERSION = "1.3.0"
 
 # Column names copied verbatim from the real downloaded header, including the
 # embedded date-stamp in "Highest_Clin_Trial (Feb '25)". If a future release
@@ -104,6 +109,31 @@ _STRUCTURE_ABSENT_SENTINEL = "none"
 _ARM_SEPARATOR = ";"
 _STRUCTURE_SEPARATOR = "/"
 
+# A PDB entry id (4 characters, first is a digit) with optional :chain suffixes:
+# '1n8z:BA', '6bi0:HL:IM', '7t97:HL:AB:CD:EF'.
+#
+# This validates the *shape of the output* rather than enumerating known bad
+# inputs, and that difference is the point. Every missing-data sentinel found in
+# this file so far -- 'na', then 'None', then a blank -- was handled reactively,
+# after it had already produced or could produce a wrong answer. Each fix knew
+# only about the shape someone had already met.
+#
+# A structure reference that is not shaped like a structure reference is not a
+# structure reference, whatever new spelling of "missing" a future release
+# invents. 'None' would have failed this check on day one, and so would 'N/A',
+# '-', 'TBD' or 'unknown' without anyone having to predict them.
+#
+# Measured on the 2025-03-18 file: 3,399 values, 679 distinct tokens, and exactly
+# two that do not match -- 'None' (the sentinel, 3,428 occurrences) and one empty
+# token produced by a double slash in row 1083 (Vislarafusp). So this pattern
+# describes the real vocabulary rather than an assumption about it.
+_PDB_REFERENCE = re.compile(r"^[0-9][A-Za-z0-9]{3}(:[A-Za-z0-9]+)*$")
+
+
+def is_structure_reference(token: str) -> bool:
+    """Whether a token is shaped like a PDB entry reference."""
+    return bool(_PDB_REFERENCE.match(token.strip()))
+
 
 def _parse_na(value: Optional[str]) -> Optional[str]:
     """Thera-SAbDab uses the literal string 'na' (not a blank cell) for missing data."""
@@ -115,7 +145,11 @@ def _parse_na(value: Optional[str]) -> Optional[str]:
     return cleaned
 
 
-def split_structure_column(value: Optional[str], arm_count: int) -> Optional[list[list[str]]]:
+def split_structure_column(
+    value: Optional[str],
+    arm_count: int,
+    anomalies: Optional[list[str]] = None,
+) -> Optional[list[list[str]]]:
     """
     Split one structure column into per-arm lists of structure references.
 
@@ -123,12 +157,21 @@ def split_structure_column(value: Optional[str], arm_count: int) -> Optional[lis
     the 'None' sentinel removed (so an empty list means "the source states there
     is no structure", which is a finding, not missing data).
 
-    Returns None -- meaning *unknown*, not *absent* -- when the number of
-    semicolon-separated tokens does not match the number of arms. That never
-    happens on the file this parser was written against (3,393/3,393 values
-    align), so it signals schema drift, and under drift the honest answer is that
-    the mapping is unknown. Guessing would attribute one arm's experimental
-    structures to a different specificity.
+    Returns None -- meaning *unknown*, not *absent* -- in three cases, all of them
+    schema drift, and under drift the honest answer is that the column cannot be
+    read:
+
+    - the number of semicolon-separated tokens does not match the number of arms
+      (never happens on the file this parser was written against: 3,393/3,393
+      values align). Guessing would attribute one arm's experimental structures to
+      a different specificity.
+    - any arm token is empty. A blank states nothing; the 'None' sentinel states
+      that no structure exists. Collapsing them would score 0.0 off an empty cell.
+    - any surviving token is not shaped like a PDB reference. Anything that
+      outlived sentinel removal is claiming to *be* a structure record, so it has
+      to look like one -- see _PDB_REFERENCE. Offending tokens are appended to
+      `anomalies` when a list is supplied, so the caller can report drift instead
+      of silently losing the only signal that it happened.
     """
     if value is None or arm_count <= 0:
         return None
@@ -155,6 +198,15 @@ def split_structure_column(value: Optional[str], arm_count: int) -> Optional[lis
             for ref in token.split(_STRUCTURE_SEPARATOR)
             if ref.strip() and ref.strip().lower() != _STRUCTURE_ABSENT_SENTINEL
         ]
+        # Anything surviving sentinel removal claims to be a structure record, so
+        # it must look like one. An unrecognised token is either a sentinel this
+        # parser has never seen or genuine corruption; both mean the column cannot
+        # be trusted, and neither may become a structure id that SPEC S26 scores.
+        unrecognised = [ref for ref in refs if not is_structure_reference(ref)]
+        if unrecognised:
+            if anomalies is not None:
+                anomalies.extend(unrecognised)
+            return None
         per_arm.append(refs)
     return per_arm
 
@@ -215,6 +267,12 @@ class TheraSAbDabRow:
     arms: list[TheraSAbDabArm]
     supported: bool                  # False only if no heavy sequence exists in any arm
     skip_reason: Optional[str] = None
+    # Structure tokens that survived sentinel removal but are not shaped like PDB
+    # references. Non-empty means the source used a spelling of "missing" this
+    # parser does not know, or the column is corrupt; the affected columns already
+    # resolved to unknown, and this carries the offending tokens up so ingestion
+    # can report them rather than discarding the only evidence of drift.
+    structure_anomalies: list[str] = field(default_factory=list)
 
 
 def parse_thera_sabdab_csv(path: Path) -> Iterator[TheraSAbDabRow]:
@@ -262,8 +320,9 @@ def parse_thera_sabdab_csv(path: Path) -> Iterator[TheraSAbDabRow]:
                 "structures_99_si": row["99% SI Structure"],
                 "structures_95_98_si": row["95-98% SI Structure"],
             }
+            structure_anomalies: list[str] = []
             for field_name, raw_value in raw_structures.items():
-                per_arm = split_structure_column(raw_value, len(arms))
+                per_arm = split_structure_column(raw_value, len(arms), structure_anomalies)
                 for arm in arms:
                     resolved = per_arm[arm.arm_index - 1] if per_arm is not None else None
                     setattr(arm, field_name, resolved)
@@ -288,6 +347,7 @@ def parse_thera_sabdab_csv(path: Path) -> Iterator[TheraSAbDabRow]:
                 arms=arms,
                 supported=supported,
                 skip_reason=skip_reason,
+                structure_anomalies=structure_anomalies,
             )
 
 

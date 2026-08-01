@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from antigens.corpus import Corpus
+from antigens.corpus import Corpus, IngestStats
 from antigens.models import ComponentType
 from antigens.numbering import number_sequence
 from antigens.parsers.thera_sabdab import (
@@ -403,6 +403,79 @@ class TestStructureSentinelAndPerArmSplit:
         })])
         arms = next(iter(parse_thera_sabdab_csv(csv_path))).arms
         assert all(arm.structures_100_si is None for arm in arms)
+
+    @pytest.mark.parametrize("unknown_sentinel", ["N/A", "-", "TBD", "unknown", "null", "missing"])
+    def test_a_sentinel_this_parser_has_never_seen_does_not_become_a_structure(
+        self, tmp_path, unknown_sentinel
+    ):
+        """The point of validating shape instead of enumerating known bad values.
+
+        Three sentinels have been found in this file so far ('na', 'None', blank),
+        each after it had already produced or could produce a wrong answer. None of
+        the spellings below is handled by name anywhere in the parser, and none of
+        them may become a structure id that SPEC S26 scores.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": unknown_sentinel})])
+        row = next(iter(parse_thera_sabdab_csv(csv_path)))
+
+        assert row.arms[0].structures_100_si is None
+        # Not asserted as the whole token: '/' is the structure separator, so
+        # 'N/A' legitimately arrives as two tokens. What matters is that neither
+        # half was accepted as an identifier and the drift was reported.
+        assert row.structure_anomalies
+
+    def test_corruption_does_not_silently_become_an_identifier(self, tmp_path):
+        """A real id survives; a malformed neighbour makes the column unknown.
+
+        Partially-readable is not readable: there is no way to tell which of the
+        two the source meant, so keeping the good half would be a guess.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": "1n8z:BA/@@broken@@"})])
+        row = next(iter(parse_thera_sabdab_csv(csv_path)))
+
+        assert row.arms[0].structures_100_si is None
+        assert "@@broken@@" in row.structure_anomalies
+        # False, not None: the other two tiers mapped cleanly and say "none", so
+        # the arm's overall answer is still known. Only the corrupt tier is lost.
+        assert row.arms[0].has_structure_record is False
+
+    def test_valid_references_still_parse_unchanged(self, tmp_path):
+        """The shape rule must not reject the forms the real file actually uses."""
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{
+            "100% SI Structure": "1n8z:BA/6bi0:HL:IM/7t97:HL:AB:CD:EF/4hkz",
+        })])
+        row = next(iter(parse_thera_sabdab_csv(csv_path)))
+
+        assert row.arms[0].structures_100_si == [
+            "1n8z:BA", "6bi0:HL:IM", "7t97:HL:AB:CD:EF", "4hkz",
+        ]
+        assert row.structure_anomalies == []
+
+    def test_double_slash_artifact_is_tolerated_not_flagged(self, tmp_path):
+        """Row 1083 of the real file contains '8tjf:HL:AB//8pwh:BA'.
+
+        An empty token between two valid ids is a source typo that loses no
+        information, so it is dropped rather than escalated to unknown -- which
+        would discard 18 genuine structure records over a stray character.
+        """
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": "8tjf:HL:AB//8pwh:BA"})])
+        row = next(iter(parse_thera_sabdab_csv(csv_path)))
+
+        assert row.arms[0].structures_100_si == ["8tjf:HL:AB", "8pwh:BA"]
+        assert row.structure_anomalies == []
+
+    def test_ingestion_reports_drift_rather_than_swallowing_it(self, tmp_path):
+        csv_path = tmp_path / "thera.csv"
+        _write_thera_csv(csv_path, [_base_row(**{"100% SI Structure": "N/A"})])
+        corpus = Corpus()
+        stats = IngestStats()
+        corpus.ingest_thera_sabdab(csv_path, stats=stats)
+
+        assert any("unrecognised structure token" in w for w in stats.warnings)
 
     def test_pair_record_carries_this_arms_structure_status(self, tmp_path):
         csv_path = tmp_path / "thera.csv"

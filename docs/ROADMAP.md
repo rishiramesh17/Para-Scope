@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-07-31, against commit on `main`, 242 tests passing.
+Last verified: 2026-07-31, against commit on `main`, 254 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–7 are complete.
@@ -307,8 +307,19 @@ follows is what a future session must not re-derive.
   Blank now resolves to **unknown**. No impact on the current file (0 blanks before
   and after; the 337/794 split is unchanged), so this is defensive.
 
+- **Structure tokens are validated by shape** *(parser 1.3.0)*. The three defects
+  above were each found after the fact, and each fix taught the parser one more
+  spelling of "missing" — an approach that only ever handles shapes someone has
+  already met. A token surviving sentinel removal must now look like a PDB
+  reference, so `N/A`, `-`, `TBD` or any future invention resolves to unknown and
+  is reported through `IngestStats.warnings` instead of becoming a scored
+  structure id. Measured first: 3,399 values, 679 distinct tokens, only `None`
+  and one double-slash artifact are not PDB-shaped, so the rule describes the
+  real data. **Use this pattern in Gate 8** — pairing has the identical failure
+  mode, where a truthy sentinel becomes a fabricated pair.
+
 `PairRecord.structure_available` is `Optional[bool]`. **`None` must never be coerced
-to `False`** — parser version 1.2.0, `corpus_schema_version` 5.0.0.
+to `False`** — parser version 1.3.0, `corpus_schema_version` 5.0.0.
 
 Snapshot-specific counts are pinned in
 `tests/integration/test_therapeutic_snapshot_counts.py`, guarded by the source

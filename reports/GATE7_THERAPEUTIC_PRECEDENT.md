@@ -1,11 +1,13 @@
 # Gate 7 — Therapeutic Precedent (SPEC §26)
 
 Built 2026-07-31. Corpus: 46,627 components, `corpus_schema_version` 5.0.0,
-`CACHE_FORMAT_VERSION` 1.2.0. Suite: **242 tests passing** (was 183 pre-gate).
+`CACHE_FORMAT_VERSION` 1.2.0. Suite: **254 tests passing** (was 183 pre-gate).
 
-*Revised 2026-07-31 after review: a third missing-data sentinel was found (below),
-the "Gate 9 completes the composite" claim was wrong and is corrected, and the
-snapshot-specific counts are now pinned in `tests/integration/`.*
+*Revised 2026-07-31 after review: a third missing-data sentinel was found, and
+structure tokens are now validated by shape so the fourth is caught without
+anyone predicting it. The "Gate 9 completes the composite" claim was wrong and is
+corrected — format relevance is now owned as Gate 10.5. Snapshot-specific counts
+are pinned in `tests/integration/`, and each match carries its source database.*
 
 Answers one question: *has this component, or a similar one, been observed in an
 antibody that entered therapeutic development, and what does the curated record
@@ -13,9 +15,12 @@ say about it?* Nothing about how the candidate will behave.
 
 ---
 
-## Two defects found before any new code was written
+## Defects found in the structure-evidence path
 
-Both were in the path SPEC §26 scores directly, so they are reported first.
+Three defects, all in the path SPEC §26 scores directly, so they are reported
+first. Two were found before any new code was written; the third came out of
+review. A fourth change generalises all of them, so that the next one is caught
+by shape rather than after the fact.
 
 ### 1. Every therapeutic claimed an experimental structure — 794 of them falsely
 
@@ -79,6 +84,40 @@ distinguished from a complete one, and a wrong arm is worse than an absent one.
 defensive. It is reported because the previous two defects were also invisible
 until a fixture happened to contain the real sentinel, and the unit fixtures still
 cannot see a shape the sample rows do not include.
+
+### Structure tokens are now validated by shape (parser 1.3.0)
+
+The three defects above share a pattern worth stating plainly: each was found
+*after* the fact, and each fix taught the parser one more spelling of "missing".
+`na`, then `None`, then blank. That approach can only ever handle shapes someone
+has already met, and all three were invisible to 21 passing unit tests because
+the fixtures contained shapes the real file does not use.
+
+The generalisable fix validates the **shape of the output** instead. A token that
+survives sentinel removal is claiming to be a structure record, so it must look
+like one — a PDB entry id with optional chain suffixes. `None` fails that on day
+one, and so would `N/A`, `-`, `TBD`, `null` or `unknown`, with nobody having to
+predict them. A column containing an unrecognised token resolves to **unknown**
+and the offending tokens are reported through `IngestStats.warnings`, so drift
+surfaces instead of being discarded.
+
+**The vocabulary was measured, not assumed.** Across the 2025-03-18 file: 3,399
+values, 679 distinct tokens, and exactly two that are not PDB-shaped:
+
+| token | occurrences | handling |
+|---|---:|---|
+| `None` | 3,428 | the known sentinel — stated absence |
+| `` (empty) | 1 | double slash in row 1083 (`8tjf:HL:AB//8pwh:BA`) — dropped |
+
+The double slash is a source typo that loses no information, so it is tolerated
+rather than escalated to unknown; treating it as drift would discard 18 genuine
+structure records over a stray character. Everything else in the file is a valid
+reference, so the shape rule describes the real data rather than constraining it.
+
+Two integration tests hold this open: one parses the source CSV and asserts no
+row reports an unrecognised token, the other asserts nothing stored in the corpus
+as a structure id fails the shape check. A future release inventing a new
+sentinel fails the first by name.
 
 ---
 
