@@ -149,6 +149,48 @@ class TestRealCandidateBehaviour:
         assert result.status is EvidenceStatus.NOT_APPLICABLE
 
 
+class TestCuratedContentAtCorpusScale:
+    def test_most_pairs_are_structural_records_with_no_drug_name(self, corpus):
+        """4,562 of 5,686. Any display design assuming a name and target exist
+        renders empty fields for four results in five."""
+        named = sum(
+            1 for records in corpus.pairs._index.values()
+            if any(r.metadata.get("therapeutic_name") for r in records)
+        )
+        assert named == 1124
+        assert len(corpus.pairs) - named == 4562
+
+    def test_one_chain_pair_can_carry_many_names_and_many_targets(self, corpus):
+        """Trastuzumab's exact pair: 11 programmes, 6 distinct targets.
+
+        They are bispecifics sharing a trastuzumab arm, so each targets HER2 plus
+        something different. A single "target" field would show one of six. This is
+        why the promoted fields are lists.
+        """
+        result = compute_pairing_precedent(
+            corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL, top_k=5, shortlist_limit=500,
+        )
+        top = result.matches[0]
+
+        assert top.observation_count == 11
+        assert len(top.therapeutic_names) == 11
+        assert len(top.targets) == 6
+        assert all("HER2" in target for target in top.targets)
+        # Mixed statuses across the programmes -- one value would misreport the rest.
+        assert len(top.development_statuses) > 1
+
+    def test_structural_matches_carry_method_and_resolution(self, corpus):
+        result = compute_pairing_precedent(
+            corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL, top_k=10, shortlist_limit=500,
+        )
+        structural = [m for m in result.matches if m.pdb_ids]
+        assert structural, "expected at least one structure-backed match"
+        for match in structural:
+            assert match.structure_methods
+            assert all(r > 0 for r in match.structure_resolutions)
+            assert match.display_label.startswith("pdb_")
+
+
 class TestPairRecordsAreWellFormed:
     def test_no_pair_key_is_a_sentinel_or_malformed_checksum(self, corpus):
         """The Gate 7 shape lesson applied to pairing.

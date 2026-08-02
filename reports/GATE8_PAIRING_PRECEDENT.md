@@ -1,7 +1,7 @@
 # Gate 8 — Observed Pairing Precedent (SPEC §35.1)
 
 Built 2026-08-01. Corpus: 46,627 components, 5,686 unique pairs,
-`corpus_schema_version` 5.0.0. Suite: **293 tests passing** (was 254).
+`corpus_schema_version` 5.0.0. Suite: **303 tests passing** (was 254).
 
 Answers one question: *has this heavy chain been observed paired with this light
 chain, in a single source record?* Nothing about whether the submitted chains
@@ -187,6 +187,42 @@ chains**, in two different sources. Both are real observations. This is why the
 pair, not the chain, is the unit of evidence.
 
 ---
+
+## What a pair *is*, not just how similar it is (engine 1.1.0)
+
+*(added 2026-08-02 after design review)*
+
+The measurements above say how closely an observed pair resembles the candidate.
+They said nothing about **which antibody it is** — that lived in
+`PairRecord.metadata`, an untyped dict, reachable only by knowing the right string
+key. Promoted onto each match: therapeutic names, targets, development statuses,
+construct formats, PDB entries, experimental methods, resolutions, and a
+convenience `display_label`.
+
+Same reasoning as Gate 7's `source_databases`: the information was always present,
+but a wrong key returns `None` rather than raising.
+
+### Three measured facts that constrain any display of this
+
+- **80% of pairs have no drug name and no target.** 4,562 of 5,686 are structural
+  records — PDB entry, method, resolution, no name. They are not missing an
+  identity; they have a different one. A layout with fixed Name/Target slots
+  renders empty for four results in five.
+- **One chain pair can carry many names and many targets.** Trastuzumab's exact
+  pair is backed by 11 records: 11 distinct programmes with **6 different targets**
+  and mixed development statuses, because each is a bispecific sharing a
+  trastuzumab arm. A single "Target: HER2" field would show one of six. This is
+  why every promoted field is a list.
+- **Identity is not similarity.** The reported number is `global_identity` — exact
+  matches over the longer sequence. Naming it "similarity" would imply conservative
+  substitutions are counted; they are not. And identity without coverage is the
+  trap `approximate.py` closes, where a random sequence scored identity 1.000 at
+  4% coverage. Joint coverage must accompany any identity shown.
+
+`display_label` qualifies with the arm only when more than one exists — saying
+"arm 1" on a monospecific implies an arm 2 that does not. Flattening an arm into
+the whole antibody is the same conflation that produced the arms-sharing-structures
+defect.
 
 ## Not implemented, deliberately (SPEC §35.2)
 

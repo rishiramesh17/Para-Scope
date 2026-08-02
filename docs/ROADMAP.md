@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-08-01, against commit on `main`, 293 tests passing.
+Last verified: 2026-08-02, against commit on `main`, 303 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–8 are complete.
@@ -287,6 +287,47 @@ and §35.**
 - **No light chain returns `not_applicable`, never `not_found`.** A single-domain
   construct has no light chain by design; reporting a missing result would make a
   deliberate architecture indistinguishable from an unobserved pair.
+
+### Presentation — decided for Gate 11, recorded here while the data is fresh
+
+*(reviewed 2026-08-02)*
+
+Gate 11 should present pairing evidence as **one card per observed antibody pair**,
+not as a similarity table. A table hides the single thing this dimension uniquely
+provides: *each row is one complete antibody whose two chains were seen together*.
+Two independent search results can never establish that, so burying it wastes the
+gate. Call it an "observed antibody pair", not a "pair" — the latter reads as *the
+two numbers* rather than *the two chains*.
+
+Engine 1.1.0 promoted the fields such a card needs off `PairRecord.metadata` and
+onto each match: names, targets, statuses, formats, PDB entries, methods,
+resolutions, plus a convenience `display_label`. Presentation stays deferred; the
+data model does not need to be.
+
+**Three constraints measured on the real corpus, all of which break the obvious
+card design:**
+
+- **80% of pairs have no drug name and no target.** 4,562 of 5,686 are structural
+  records — a PDB entry, method and resolution, no name. A card with fixed
+  Name/Target slots renders empty for four results in five. Those pairs are not
+  missing an identity; they have a *different* one, and the card must adapt to
+  which fields are populated rather than assume.
+- **One chain pair can carry many names and many targets.** Trastuzumab's exact
+  pair is backed by 11 records: 11 distinct programmes, **6 different targets**,
+  and mixed development statuses. They are bispecifics sharing a trastuzumab arm.
+  A single "Target: HER2" field would show one of six. This is why the promoted
+  fields are lists.
+- **Identity is not similarity, and coverage cannot be dropped.** The reported
+  number is `global_identity` — exact matches over the longer sequence. Labelling
+  it "similarity" would tell a scientist conservative substitutions are counted;
+  they are not. And identity without coverage is the trap `approximate.py` exists
+  to close: a random sequence once scored identity 1.000 at 4% coverage. Any card
+  showing an identity must show joint coverage beside it.
+
+Also: label an arm as an arm. A Thera-SAbDab pair is one arm of a construct, and
+a bispecific has two with different specificities. "Observed Antibody: Evusheld"
+flattens exactly the distinction that the arms-sharing-structures defect came
+from. `display_label` qualifies with the arm only when more than one exists.
 
 ### The test that matters, and the mistake in writing it
 

@@ -70,7 +70,10 @@ from antigens.numbering import compute_sequence_checksum
 # returned. Stored on every result so a stored profile is never reinterpreted
 # under later rules (SPEC S19).
 #   1.0.0 -- observed pairing precedent; five computable dimensions, three blocked
-PAIRING_PRECEDENT_VERSION = "1.0.0"
+#   1.1.0 -- curated record content (names, targets, status, PDB entry, method,
+#            resolution) promoted from PairRecord.metadata onto each match, so a
+#            consumer never has to look up dict keys to say what a pair *is*
+PAIRING_PRECEDENT_VERSION = "1.1.0"
 
 # No calibration exists yet (Gate 9). Named rather than left blank so a stored
 # record states which calibration produced it, including when the answer is "none".
@@ -157,6 +160,42 @@ class PairMatch:
     structure_supported: Optional[bool] = None
     structure_ids: list[str] = field(default_factory=list)
 
+    # ---- Curated record content, promoted out of PairRecord.metadata -----------
+    #
+    # These are lists, not single values, and that is not defensiveness. One chain
+    # pair is routinely backed by many records: trastuzumab's exact pair rests on
+    # 11, which are 11 distinct therapeutic programmes built on the same chains,
+    # exactly as Gate 7 found for the VH alone. Collapsing them to "the" name would
+    # pick one arbitrarily and hide the other ten.
+    #
+    # They are typed fields rather than dict lookups for the same reason Gate 7
+    # promoted source_databases: the information was always present, but reaching
+    # it meant knowing the right string key, and a wrong key returns None instead
+    # of raising.
+    #
+    # Which lists are populated depends on what kind of record backs the pair, and
+    # that is deliberately left to be read from the data rather than mapped from a
+    # source name. 4,562 of 5,686 pairs are structural records with a PDB entry,
+    # method and resolution but no drug name; 1,124 are therapeutic arms with a
+    # name and target but no experimental method. A consumer asks which fields are
+    # populated; it does not need a hardcoded "SAbDab2 means structural" table that
+    # would silently rot when a third source is added.
+    therapeutic_names: list[str] = field(default_factory=list)
+    targets: list[str] = field(default_factory=list)
+    development_statuses: list[str] = field(default_factory=list)
+    highest_clinical_trials: list[str] = field(default_factory=list)
+    construct_formats: list[str] = field(default_factory=list)
+
+    pdb_ids: list[str] = field(default_factory=list)
+    structure_methods: list[str] = field(default_factory=list)
+    structure_resolutions: list[float] = field(default_factory=list)
+
+    # Convenience only; the lists above are authoritative. Includes the arm when
+    # the record is one arm of a multi-specific construct, because an arm is not
+    # the whole antibody -- flattening that at the display layer would recreate
+    # the bispecific defect where one arm was credited with another's records.
+    display_label: str = ""
+
     # True when either chain's hit came from a k-mer shortlist, whose hit set is
     # ~96% complete. A caller must not report "no closer pair exists" from these.
     shortlisted: bool = False
@@ -221,6 +260,62 @@ def _checksum_of(record_id: str) -> str:
     """Component record ids are '<type>::<checksum>'; the pair index keys on the checksum."""
     _, _, checksum = record_id.partition("::")
     return checksum
+
+
+def _collect(records: list[PairRecord], key: str) -> list[str]:
+    """Deduplicated, sorted values for one metadata key across a pair's records.
+
+    Absent keys and blank values are dropped rather than becoming empty strings:
+    a record that does not state a target has no target, and "" would render as a
+    populated-but-empty field.
+    """
+    values = {
+        str(record.metadata.get(key)).strip()
+        for record in records
+        if record.metadata.get(key) not in (None, "")
+    }
+    return sorted(v for v in values if v)
+
+
+def _collect_resolutions(records: list[PairRecord]) -> list[float]:
+    """Resolutions as floats, skipping anything non-numeric rather than guessing."""
+    resolutions = set()
+    for record in records:
+        raw = record.metadata.get("resolution")
+        if raw in (None, ""):
+            continue
+        try:
+            resolutions.add(float(raw))
+        except (TypeError, ValueError):
+            continue
+    return sorted(resolutions)
+
+
+def _display_label(records: list[PairRecord], therapeutic_names: list[str], pdb_ids: list[str]) -> str:
+    """A single human-readable identity for the pair.
+
+    Prefers a therapeutic name, qualified by arm where the record is one arm of a
+    multi-specific construct; falls back to a PDB entry, then the accession. Never
+    invents one -- a pair with no curated identity says so.
+    """
+    if therapeutic_names:
+        label = therapeutic_names[0] if len(therapeutic_names) == 1 else (
+            f"{therapeutic_names[0]} (+{len(therapeutic_names) - 1} more)"
+        )
+        arms = {
+            record.metadata.get("arm_index")
+            for record in records
+            if record.metadata.get("arm_index") is not None
+        }
+        # Only qualify when the record really is one arm among several. Saying
+        # "arm 1" on a conventional monospecific would imply an arm 2 that does
+        # not exist.
+        if arms and max(arms) > 1:
+            return f"{label}, arm {min(arms)}"
+        return label
+    if pdb_ids:
+        return pdb_ids[0] if len(pdb_ids) == 1 else f"{pdb_ids[0]} (+{len(pdb_ids) - 1} more)"
+    return records[0].source_accession if records else ""
 
 
 def _worst_relationship(
@@ -347,6 +442,9 @@ def _paired_candidates(
                 if pdb_id and pdb_id not in structure_ids:
                     structure_ids.append(pdb_id)
 
+            therapeutic_names = _collect(records, "therapeutic_name")
+            pdb_ids = _collect(records, "pdb_id")
+
             matches.append(PairMatch(
                 heavy_record_id=heavy_id,
                 light_record_id=light_id,
@@ -365,6 +463,15 @@ def _paired_candidates(
                 source_accessions=sorted({record.source_accession for record in records}),
                 structure_supported=structure_supported,
                 structure_ids=structure_ids,
+                therapeutic_names=therapeutic_names,
+                targets=_collect(records, "target"),
+                development_statuses=_collect(records, "development_status"),
+                highest_clinical_trials=_collect(records, "highest_clinical_trial"),
+                construct_formats=_collect(records, "format"),
+                pdb_ids=pdb_ids,
+                structure_methods=_collect(records, "method"),
+                structure_resolutions=_collect_resolutions(records),
+                display_label=_display_label(records, therapeutic_names, pdb_ids),
                 shortlisted=bool(heavy["shortlisted"] or light["shortlisted"]),
             ))
 

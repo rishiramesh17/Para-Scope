@@ -401,6 +401,87 @@ class TestLikeWithLike:
         assert same.rank_key > related.rank_key
 
 
+class TestCuratedContentIsReadableFromTheMatch:
+    """Promoted out of PairRecord.metadata so a consumer never guesses dict keys."""
+
+    def test_therapeutic_record_carries_its_name_target_and_status(self, tmp_path):
+        corpus = _corpus(tmp_path, [_row()])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+
+        assert match.therapeutic_names == ["Testuzumab"]
+        assert match.targets == ["HER2"]
+        assert match.development_statuses == ["Active"]
+        assert match.construct_formats == ["Whole mAb"]
+
+    def test_one_pair_shared_by_several_programmes_reports_all_of_them(self, tmp_path):
+        """A chain pair does not have *a* name or *a* target.
+
+        On the real corpus trastuzumab's exact pair is backed by 11 records: 11
+        distinct programmes built on the same chains, carrying 6 different targets
+        between them because each is a bispecific with a different second arm.
+        Collapsing to a single value would show one of six and hide the rest.
+        """
+        corpus = _corpus(tmp_path, [
+            _row(Therapeutic="Alpha", Target="HER2"),
+            _row(Therapeutic="Beta", Target="HER2;CD3E"),
+            _row(Therapeutic="Gamma", Target="PD1;HER2", **{"Est. Status": "Discontinued"}),
+        ])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+
+        assert match.therapeutic_names == ["Alpha", "Beta", "Gamma"]
+        assert len(match.targets) == 3
+        assert sorted(match.development_statuses) == ["Active", "Discontinued"]
+
+    def test_missing_values_are_absent_not_blank(self, tmp_path):
+        """A record that states no target has no target, not an empty string."""
+        corpus = _corpus(tmp_path, [_row(Target="na")])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+
+        assert match.targets == []
+        assert "" not in match.therapeutic_names
+
+    def test_a_structural_record_has_no_drug_name_and_that_is_normal(self, tmp_path):
+        """4,562 of 5,686 real pairs are structures with a PDB entry and no name.
+
+        Asserted on the shape of the data rather than a source-name mapping: a
+        consumer asks which fields are populated, so adding a third source needs no
+        change here.
+        """
+        corpus = _corpus(tmp_path, [_row()])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+
+        assert match.therapeutic_names        # this fixture is therapeutic
+        assert match.pdb_ids == []            # and so carries no structural entry
+        assert match.structure_methods == []
+
+    def test_display_label_names_the_arm_only_when_there_is_more_than_one(self, tmp_path):
+        """Saying 'arm 1' on a monospecific implies an arm 2 that does not exist."""
+        mono = _corpus(tmp_path / "mono", [_row(Therapeutic="Solo")])
+        label = compute_pairing_precedent(mono, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0].display_label
+        assert label == "Solo"
+
+        bispecific = _corpus(tmp_path / "bi", [_row(Therapeutic="Duo", **{
+            "HeavySequence(ifbispec)": OTHER_VH,
+            "LightSequence(ifbispec)": OTHER_VL,
+        })])
+        result = compute_pairing_precedent(bispecific, OTHER_VH, OTHER_VL)
+        assert result.matches[0].display_label == "Duo, arm 2"
+
+    def test_display_label_says_how_many_others_share_the_pair(self, tmp_path):
+        corpus = _corpus(tmp_path, [
+            _row(Therapeutic="Alpha"), _row(Therapeutic="Beta"), _row(Therapeutic="Gamma"),
+        ])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+        assert match.display_label == "Alpha (+2 more)"
+
+    def test_label_is_convenience_and_the_lists_stay_authoritative(self, tmp_path):
+        corpus = _corpus(tmp_path, [_row(Therapeutic="Alpha"), _row(Therapeutic="Beta")])
+        match = compute_pairing_precedent(corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL).matches[0]
+
+        assert "Beta" not in match.display_label
+        assert "Beta" in match.therapeutic_names
+
+
 class TestProvenanceAndFraming:
     def test_disclaimer_is_carried_verbatim_on_every_result(self, tmp_path):
         corpus = _corpus(tmp_path, [_row()])
