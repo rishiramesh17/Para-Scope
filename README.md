@@ -34,6 +34,7 @@ the current blocker on two finished evidence dimensions.
 | 8 | Observed heavy-light pairing precedent (SPEC §35.1) | ✅ |
 | 9 | Empirical reference distributions / calibration | next |
 | 10–11 | Confidence scoring, final profile assembly | planned |
+| 12+ | Calibrated prediction layer ([details](#beyond-gate-11-a-calibrated-prediction-layer-planned-not-built)) | intent, unscoped |
 
 **[docs/ROADMAP.md](docs/ROADMAP.md)** is the living source of truth — every
 gate's decisions, defects found, and what a future session should not
@@ -171,6 +172,48 @@ files reuse the numbering cache and take seconds, not minutes.
 
 Each prints a worked example against the real corpus — matches, raw
 measurements, and exactly which evidence dimensions are blocked and why.
+
+## Beyond Gate 11: a calibrated prediction layer (planned, not built)
+
+Everything above is retrieval and comparison. It looks up what's already
+known and reports it with provenance — it predicts nothing, by design,
+through Gate 11.
+
+The next phase adds a real prediction model on top, scoped to what
+sequence-based ML can actually do today. Full binding-affinity, folding, or
+clinical-outcome prediction from sequence alone remains an open, largely
+unsolved problem across the field — no credible platform claims to have
+solved it, and this one won't pretend to either.
+
+What's genuinely tractable, and where the planned model is aimed:
+
+- **Developability risk flags**, not binding prediction — aggregation
+  propensity, viscosity risk, polyreactivity, the kind of in-silico
+  screens (charge/hydrophobicity patch metrics in the style of TAP-type
+  tools) already used industry-wide as narrow, measurable, evaluable
+  endpoints. A model with a real accuracy number on a well-defined task,
+  not a black-box oracle on an unsolved one.
+- **The evidence this platform already computes becomes the model's
+  feature set**, rather than re-deriving features from raw sequence a
+  second time. Database-Relative Novelty, observed pairing precedent,
+  therapeutic precedent, human repertoire window coverage — Gates 6
+  through 8 exist specifically to produce calibrated, versioned inputs a
+  downstream model can train on.
+- Every prediction, when one ships, carries the same discipline as the
+  evidence dimensions above it: a named model version, a confidence
+  interval measured on held-out data, and an explicit statement of what
+  it was and wasn't trained to predict. No confidence interval, no ship.
+- **A plain-language layer on top, not a new source of claims.** An LLM
+  can make a dense evidence profile genuinely readable — explaining what
+  `qcov`, a withheld composite, or an `insufficient_evidence` status
+  actually mean for a specific candidate — grounded entirely in numbers
+  the platform already computed and can cite. It explains evidence; it
+  does not generate new ones.
+
+This section is intent, not a gate — no committed timeline or endpoint
+ordering yet. Recorded here so it isn't miscast as a black-box AI bolted
+onto a comparison tool: any predictive layer here inherits the same
+evidentiary rigor as everything above it, or it doesn't ship.
 
 ## License
 
