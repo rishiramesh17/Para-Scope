@@ -15,14 +15,14 @@ from typing import Optional
 
 from Bio.Align import PairwiseAligner, substitution_matrices
 
-from antigens.indexes.shortlist import (
+from para_scope.indexes.shortlist import (
     DEFAULT_K,
     DEFAULT_SHORTLIST_LIMIT,
     SHORTLIST_UNSUITABLE_TYPES,
     SHORTLIST_VERSION,
     KmerShortlistIndex,
 )
-from antigens.models import ComponentType
+from para_scope.models import ComponentType
 
 # Component types long enough for whole-sequence alignment scoring to be meaningful.
 ELIGIBLE_TYPES = frozenset({

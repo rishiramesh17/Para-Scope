@@ -12,10 +12,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
-from antigens.indexes import ApproximateIndex, ExactIndex, PairIndex, PairRecord, PositionalIndex
-from antigens.indexes.approximate import ELIGIBLE_TYPES as APPROXIMATE_ELIGIBLE_TYPES
-from antigens.models import ComponentType, SourceSnapshot
-from antigens.numbering import (
+from para_scope.indexes import ApproximateIndex, ExactIndex, PairIndex, PairRecord, PositionalIndex
+from para_scope.indexes.approximate import ELIGIBLE_TYPES as APPROXIMATE_ELIGIBLE_TYPES
+from para_scope.models import ComponentType, SourceSnapshot
+from para_scope.numbering import (
     HEAVY_CHAIN_TYPES,
     IMGT_REGION_BOUNDARIES,
     LIGHT_CHAIN_TYPES,
@@ -24,18 +24,18 @@ from antigens.numbering import (
     extract_region_sequence,
     number_sequences,
 )
-from antigens.parsers.sabdab2 import (
+from para_scope.parsers.sabdab2 import (
     PARSER_VERSION as SABDAB2_PARSER_VERSION,
 )
-from antigens.parsers.sabdab2 import (
+from para_scope.parsers.sabdab2 import (
     SAbDab2Row,
     compute_file_checksum,
     parse_ab_split_csv,
 )
-from antigens.parsers.thera_sabdab import (
+from para_scope.parsers.thera_sabdab import (
     PARSER_VERSION as THERA_SABDAB_PARSER_VERSION,
 )
-from antigens.parsers.thera_sabdab import (
+from para_scope.parsers.thera_sabdab import (
     TheraSAbDabRow,
     compute_file_checksum as compute_thera_sabdab_checksum,
     parse_thera_sabdab_csv,

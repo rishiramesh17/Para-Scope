@@ -14,16 +14,16 @@ which is worse here than producing none.
 import csv
 from pathlib import Path
 
-from antigens.corpus import Corpus, split_alternative_names
-from antigens.models import (
+from para_scope.corpus import Corpus, split_alternative_names
+from para_scope.models import (
     ComponentRelationship,
     ComponentType,
     EvidenceClass,
     EvidenceStatus,
 )
-from antigens.numbering import compute_sequence_checksum, number_sequence
-from antigens.parsers.thera_sabdab import REQUIRED_COLUMNS
-from antigens.therapeutic_precedent import (
+from para_scope.numbering import compute_sequence_checksum, number_sequence
+from para_scope.parsers.thera_sabdab import REQUIRED_COLUMNS
+from para_scope.therapeutic_precedent import (
     BLOCKED_TERMS,
     CALIBRATION_VERSION,
     THERAPEUTIC_DISCLAIMER,
@@ -509,7 +509,7 @@ class TestProvenanceAndFraming:
 
     def test_module_exposes_no_prohibited_claim_vocabulary(self):
         """The dimension names comparisons, never conclusions drawn from them."""
-        import antigens.therapeutic_precedent as module
+        import para_scope.therapeutic_precedent as module
 
         banned = ("efficacy", "safety_score", "will_bind", "success", "approved_score")
         for name in dir(module):

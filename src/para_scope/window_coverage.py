@@ -69,8 +69,8 @@ and the two must remain distinguishable at every layer.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from antigens.features import STANDARD_AMINO_ACIDS
-from antigens.models import EvidenceStatus
+from para_scope.features import STANDARD_AMINO_ACIDS
+from para_scope.models import EvidenceStatus
 
 # Bump on any change that alters a computed coverage value, including a change of
 # reference set, window length, or the minimum-window rule. Stored on every result

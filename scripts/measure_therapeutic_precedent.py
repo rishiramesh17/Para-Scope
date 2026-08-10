@@ -14,9 +14,9 @@ from pathlib import Path
 
 sys.path.insert(0, "src")
 
-from antigens.models import ComponentType, EvidenceStatus
-from antigens.persistence import load_corpus_snapshot
-from antigens.therapeutic_precedent import compute_therapeutic_precedent
+from para_scope.models import ComponentType, EvidenceStatus
+from para_scope.persistence import load_corpus_snapshot
+from para_scope.therapeutic_precedent import compute_therapeutic_precedent
 
 SNAPSHOT = Path("data/cache/combined_corpus_snapshot.pkl")
 

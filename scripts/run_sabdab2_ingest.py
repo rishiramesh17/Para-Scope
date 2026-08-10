@@ -9,8 +9,8 @@ import json
 import time
 from pathlib import Path
 
-from antigens.corpus import Corpus, build_sabdab2_snapshot
-from antigens.models import ComponentType
+from para_scope.corpus import Corpus, build_sabdab2_snapshot
+from para_scope.models import ComponentType
 
 CSV_PATH = Path("data/snapshots/sabdab2/splits_final/ab_split.csv")
 OUTPUT_PATH = Path("data/snapshots/sabdab2/ingest_report.json")

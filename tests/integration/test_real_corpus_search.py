@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from antigens.models import ComponentType
-from antigens.numbering import number_sequence
-from antigens.persistence import load_corpus_snapshot
+from para_scope.models import ComponentType
+from para_scope.numbering import number_sequence
+from para_scope.persistence import load_corpus_snapshot
 
 SNAPSHOT_PATH = Path("data/cache/sabdab2_corpus_snapshot.pkl")
 GOLD_QUERIES_PATH = Path("benchmarks/search_gold_queries.json")

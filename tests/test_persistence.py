@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 
-import antigens.corpus as corpus_module
-from antigens.corpus import Corpus, IngestStats, build_sabdab2_snapshot
-from antigens.models import ComponentType, SourceSnapshot
-from antigens.numbering import number_sequence, number_sequences
-from antigens.parsers.sabdab2 import REQUIRED_COLUMNS
-from antigens.persistence import (
+import para_scope.corpus as corpus_module
+from para_scope.corpus import Corpus, IngestStats, build_sabdab2_snapshot
+from para_scope.models import ComponentType, SourceSnapshot
+from para_scope.numbering import number_sequence, number_sequences
+from para_scope.parsers.sabdab2 import REQUIRED_COLUMNS
+from para_scope.persistence import (
     StaleSnapshotError,
     ingest_sabdab2_cached,
     load_corpus_snapshot,

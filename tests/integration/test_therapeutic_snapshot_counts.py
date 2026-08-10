@@ -22,12 +22,12 @@ from pathlib import Path
 
 import pytest
 
-from antigens.parsers.thera_sabdab import (
+from para_scope.parsers.thera_sabdab import (
     PARSER_VERSION,
     is_structure_reference,
     parse_thera_sabdab_csv,
 )
-from antigens.persistence import load_corpus_snapshot
+from para_scope.persistence import load_corpus_snapshot
 
 SNAPSHOT_PATH = Path("data/cache/combined_corpus_snapshot.pkl")
 SOURCE_CSV = Path(

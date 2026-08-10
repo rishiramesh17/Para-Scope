@@ -6,7 +6,7 @@ never crosses the CDR-H3/CDR-L3 or VH/VL boundary (CLAUDE.md: only compare like 
 
 from collections import defaultdict
 
-from antigens.models import ComponentType
+from para_scope.models import ComponentType
 
 DEFAULT_OVERLAP_THRESHOLD = 0.95
 

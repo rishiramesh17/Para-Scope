@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from antigens.corpus import Corpus, IngestStats
-from antigens.models import ComponentType
-from antigens.numbering import number_sequence
-from antigens.parsers.thera_sabdab import (
+from para_scope.corpus import Corpus, IngestStats
+from para_scope.models import ComponentType
+from para_scope.numbering import number_sequence
+from para_scope.parsers.thera_sabdab import (
     REQUIRED_COLUMNS,
     is_single_domain_format,
     parse_thera_sabdab_csv,
@@ -251,7 +251,7 @@ class TestCorpusThereSAbDabIngestion:
         with both source databases recorded -- never double-counted (SPEC S15)."""
         import csv as csv_module
 
-        from antigens.parsers.sabdab2 import REQUIRED_COLUMNS as SABDAB2_COLUMNS
+        from para_scope.parsers.sabdab2 import REQUIRED_COLUMNS as SABDAB2_COLUMNS
 
         sabdab2_path = tmp_path / "ab_split.csv"
         with open(sabdab2_path, "w", newline="", encoding="utf-8") as f:

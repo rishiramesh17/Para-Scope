@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-Antigens is an **explainable antibody component comparison and candidate-assembly platform**. Users submit existing antibody sequences, or assemble a candidate construct from selected components. The platform validates the arrangement, compares every component against equivalent known components, and produces a transparent comparative evidence profile with full provenance.
+Para-Scope is an **explainable antibody component comparison and candidate-assembly platform**. Users submit existing antibody sequences, or assemble a candidate construct from selected components. The platform validates the arrangement, compares every component against equivalent known components, and produces a transparent comparative evidence profile with full provenance.
 
 It is **not** a binding predictor, docking engine, affinity model, or antibody-design AI.
 
@@ -109,14 +109,14 @@ blocks calibrated terms in both Gate 7 and Gate 8).
 
 ## Architecture
 
-Python 3.13, `src/` layout, package `antigens` (repo is named Para-Scope; the
-package name has not been renamed). Dependencies are deliberately few: `anarcii`
-for numbering, `biopython` for alignment and residue chemistry, `promb` for the
-bundled human repertoire peptide reference set (MIT; data ships inside the wheel,
-so nothing is fetched at scoring time).
+Python 3.13, `src/` layout, package `para_scope` (distribution name `para-scope`,
+matching the repo). Dependencies are deliberately few: `anarcii` for numbering,
+`biopython` for alignment and residue chemistry, `promb` for the bundled human
+repertoire peptide reference set (MIT; data ships inside the wheel, so nothing is
+fetched at scoring time).
 
 ```
-src/antigens/
+src/para_scope/
   models.py            Component/evidence dataclasses, EvidenceStatus, enums
   numbering.py         ANARCII wrapper, IMGT coordinates, region extraction
   corpus.py            In-memory corpus, ingestion, CORPUS_SCHEMA_VERSION

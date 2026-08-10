@@ -10,13 +10,13 @@ scripts/benchmark_two_stage_search.py against the real corpus.
 
 import pytest
 
-from antigens.indexes import ApproximateIndex
-from antigens.indexes.shortlist import (
+from para_scope.indexes import ApproximateIndex
+from para_scope.indexes.shortlist import (
     DEFAULT_K,
     KmerShortlistIndex,
     extract_kmers,
 )
-from antigens.models import ComponentType
+from para_scope.models import ComponentType
 
 TRASTUZUMAB_VH = (
     "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKG"

@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "antigens"
+name = "para-scope"
 version = "0.1.0"
 description = "Explainable antibody component comparison and candidate-assembly platform"
 requires-python = ">=3.11"
@@ -23,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-antigens = "antigens.cli:main"
+para-scope = "para_scope.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

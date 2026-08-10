@@ -28,8 +28,8 @@ import json
 import random
 from pathlib import Path
 
-from antigens.models import ComponentType
-from antigens.persistence import load_corpus_snapshot
+from para_scope.models import ComponentType
+from para_scope.persistence import load_corpus_snapshot
 
 SNAPSHOT_PATH = Path("data/cache/sabdab2_corpus_snapshot.pkl")
 OUTPUT_PATH = Path("benchmarks/search_gold_queries.json")

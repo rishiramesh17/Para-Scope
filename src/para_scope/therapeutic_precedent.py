@@ -60,21 +60,21 @@ what was not attempted -- rather than an empty result that reads as "nothing fou
 from dataclasses import dataclass, field
 from typing import Optional
 
-from antigens.corpus import Corpus, TherapeuticRecord
-from antigens.indexes.approximate import (
+from para_scope.corpus import Corpus, TherapeuticRecord
+from para_scope.indexes.approximate import (
     ALIGNMENT_SCORING_VERSION,
     ELIGIBLE_TYPES as APPROXIMATE_ELIGIBLE_TYPES,
     MIN_QUERY_COVERAGE,
     MIN_SUBJECT_COVERAGE,
 )
-from antigens.models import (
+from para_scope.models import (
     ComponentRelationship,
     ComponentType,
     EvidenceClass,
     EvidenceStatus,
     compare_eligibility,
 )
-from antigens.numbering import compute_sequence_checksum
+from para_scope.numbering import compute_sequence_checksum
 
 # Bump on any change that alters an emitted measurement or the set of matches
 # returned. Stored on every result so a stored profile is never reinterpreted

@@ -16,12 +16,12 @@ artifact, not a time box. Gates 0–8 are complete.
 | Gate | Scope | Status | Artifact |
 |---|---|---|---|
 | 0 | Baseline audit | ✅ | `reports/V2_BASELINE_AUDIT.md` |
-| 0.5 | Persistence layer | ✅ | `src/antigens/persistence.py` |
+| 0.5 | Persistence layer | ✅ | `src/para_scope/persistence.py` |
 | 1 | End-to-end search validation | ✅ | `reports/END_TO_END_SEARCH_VALIDATION.md` |
 | 2 | Thera-SAbDab ingestion | ✅ | `reports/THERASABDAB_INGESTION.md` |
 | 3 | Two-stage approximate search | ✅ | `reports/TWO_STAGE_SEARCH.md` |
-| 4 | Deterministic feature engine | ✅ | `src/antigens/features.py` |
-| 5 | Motif observation engine | ✅ | `src/antigens/motifs.py` |
+| 4 | Deterministic feature engine | ✅ | `src/para_scope/features.py` |
+| 5 | Motif observation engine | ✅ | `src/para_scope/motifs.py` |
 | 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
 | 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
 | 8 | Pairing precedent | ✅ | `reports/GATE8_PAIRING_PRECEDENT.md` |
@@ -527,8 +527,13 @@ germline baseline discussed above.
   doing when profile assembly makes the cost visible, not before.
 - 1,375 skipped rows and 72 numbering failures inherited from Phase 1a have never been
   individually reviewed.
-- Repo is `Para-Scope`; Python package is `antigens`. Renaming gets more annoying each
-  gate. Undecided.
+- **Resolved 2026-08-10:** repo/package name mismatch. Package renamed `antigens` →
+  `para_scope` (distribution name `para-scope`), matching the repo, ahead of making
+  it public. 107 whole-word occurrences across 32 files, mechanical except
+  `pyproject.toml`'s `name`/script-entry lines and the CLI usage string, which name
+  the hyphenated distribution form rather than the importable module. `reports/`
+  left untouched — those are dated records of what was true when each gate was
+  built, not living documentation.
 
 ---
 

@@ -8,7 +8,7 @@ every approximate value carries its limitation.
 
 import pytest
 
-from antigens.features import (
+from para_scope.features import (
     FEATURE_ENGINE_VERSION,
     STANDARD_AMINO_ACIDS,
     NonStandardResidueError,

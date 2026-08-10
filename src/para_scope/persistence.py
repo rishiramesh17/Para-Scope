@@ -24,9 +24,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from antigens.corpus import CORPUS_SCHEMA_VERSION, Corpus, IngestStats
-from antigens.models import SourceSnapshot
-from antigens.numbering import NumberedComponent, get_anarcii_version
+from para_scope.corpus import CORPUS_SCHEMA_VERSION, Corpus, IngestStats
+from para_scope.models import SourceSnapshot
+from para_scope.numbering import NumberedComponent, get_anarcii_version
 
 # 1.2.0 -- source_snapshots now persist all eight SourceSnapshot fields; earlier
 #          formats dropped license_id, snapshot_id, retrieved_at, schema_version.
@@ -184,7 +184,7 @@ def ingest_sabdab2_cached(csv_path: Path, cache_dir: Path) -> tuple[Corpus, Inge
     changes to corpus.py's indexing logic take effect immediately; only ANARCII
     numbering itself is skipped when the cache hits.
     """
-    from antigens.corpus import build_sabdab2_snapshot
+    from para_scope.corpus import build_sabdab2_snapshot
 
     snapshot = build_sabdab2_snapshot(csv_path)
     cached = load_numbering_cache(cache_dir, snapshot.raw_checksum)

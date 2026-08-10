@@ -34,7 +34,7 @@ stored on the component, never from re-deriving coordinates here.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from antigens.numbering import (
+from para_scope.numbering import (
     IMGT_GAP_CHARACTERS,
     IMGT_REGION_BOUNDARIES,
     NumberedComponent,

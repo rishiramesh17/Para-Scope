@@ -17,15 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from antigens.corpus import Corpus
-from antigens.models import (
+from para_scope.corpus import Corpus
+from para_scope.models import (
     ComponentRelationship,
     ComponentType,
     EvidenceClass,
     EvidenceStatus,
 )
-from antigens.numbering import compute_sequence_checksum
-from antigens.pairing_precedent import (
+from para_scope.numbering import compute_sequence_checksum
+from para_scope.pairing_precedent import (
     BLOCKED_DIMENSIONS,
     CALIBRATION_VERSION,
     PAIRING_DISCLAIMER,
@@ -33,7 +33,7 @@ from antigens.pairing_precedent import (
     _checksum_of,
     compute_pairing_precedent,
 )
-from antigens.parsers.thera_sabdab import REQUIRED_COLUMNS
+from para_scope.parsers.thera_sabdab import REQUIRED_COLUMNS
 
 TRASTUZUMAB_VH = (
     "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS"
@@ -373,7 +373,7 @@ class TestLikeWithLike:
         Otherwise an exact heavy match would carry a related-class light match
         into same-class evidence, which CLAUDE.md forbids merging.
         """
-        from antigens.pairing_precedent import _worst_relationship
+        from para_scope.pairing_precedent import _worst_relationship
 
         assert _worst_relationship(
             ComponentRelationship.EXACT_SAME_TYPE,
@@ -381,7 +381,7 @@ class TestLikeWithLike:
         ) is ComponentRelationship.RELATED_CLASS
 
     def test_related_class_pairs_rank_below_same_class_at_equal_identity(self, tmp_path):
-        from antigens.pairing_precedent import PairMatch
+        from para_scope.pairing_precedent import PairMatch
 
         def _match(relationship):
             return PairMatch(
@@ -516,7 +516,7 @@ class TestProvenanceAndFraming:
         assert match.observation_count == len(match.source_records)
 
     def test_module_exposes_no_prohibited_claim_vocabulary(self):
-        import antigens.pairing_precedent as module
+        import para_scope.pairing_precedent as module
 
         banned = ("compatib", "will_pair", "predicted_pair", "stability", "affinity")
         offenders = [
@@ -527,7 +527,7 @@ class TestProvenanceAndFraming:
 
     def test_35_2_interface_prediction_is_absent(self):
         """SPEC S35.2 defers predicted VH-VL interface compatibility entirely."""
-        import antigens.pairing_precedent as module
+        import para_scope.pairing_precedent as module
 
         source = Path(module.__file__).read_text()
         for banned in ("orientation", "buried_surface", "steric"):

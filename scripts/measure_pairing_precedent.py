@@ -8,9 +8,9 @@ source records), the corroboration distribution, and a worked example.
 from collections import Counter
 from pathlib import Path
 
-from antigens.models import ComponentType, EvidenceStatus
-from antigens.pairing_precedent import compute_pairing_precedent
-from antigens.persistence import load_corpus_snapshot
+from para_scope.models import ComponentType, EvidenceStatus
+from para_scope.pairing_precedent import compute_pairing_precedent
+from para_scope.persistence import load_corpus_snapshot
 
 SNAPSHOT = Path("data/cache/combined_corpus_snapshot.pkl")
 

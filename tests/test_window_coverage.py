@@ -16,8 +16,8 @@ Three things are under test:
 
 import pytest
 
-from antigens.models import EvidenceStatus
-from antigens.window_coverage import (
+from para_scope.models import EvidenceStatus
+from para_scope.window_coverage import (
     COVERAGE_DISCLAIMER,
     MINIMUM_WINDOWS_FOR_FRACTION,
     REFERENCE_SET_ID,
@@ -215,7 +215,7 @@ class TestMissingEvidenceIsNotZero:
         def explode(*args, **kwargs):
             raise ReferenceSetUnavailable("promb not installed")
 
-        monkeypatch.setattr("antigens.window_coverage.load_reference_set", explode)
+        monkeypatch.setattr("para_scope.window_coverage.load_reference_set", explode)
         result = compute_window_coverage(TRASTUZUMAB_VH)
         assert result.status is EvidenceStatus.DATABASE_UNAVAILABLE
         assert result.coverage is None
@@ -271,7 +271,7 @@ class TestProvenanceAndFraming:
 
     def test_module_exposes_no_humanness_vocabulary(self):
         """The naming decision is enforced, not just documented."""
-        import antigens.window_coverage as module
+        import para_scope.window_coverage as module
 
         public = [name for name in dir(module) if not name.startswith("_")]
         for name in public:

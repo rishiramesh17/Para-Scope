@@ -50,21 +50,21 @@ separate from observed pairing rather than being converted into it.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from antigens.corpus import Corpus
-from antigens.indexes.approximate import (
+from para_scope.corpus import Corpus
+from para_scope.indexes.approximate import (
     ALIGNMENT_SCORING_VERSION,
     MIN_QUERY_COVERAGE,
     MIN_SUBJECT_COVERAGE,
 )
-from antigens.indexes.pair import PairRecord
-from antigens.models import (
+from para_scope.indexes.pair import PairRecord
+from para_scope.models import (
     ComponentRelationship,
     ComponentType,
     EvidenceClass,
     EvidenceStatus,
     compare_eligibility,
 )
-from antigens.numbering import compute_sequence_checksum
+from para_scope.numbering import compute_sequence_checksum
 
 # Bump on any change that alters an emitted measurement or the set of pairs
 # returned. Stored on every result so a stored profile is never reinterpreted

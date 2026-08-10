@@ -8,13 +8,13 @@ assessment (no severity, no score, disclaimer always present).
 
 from dataclasses import asdict, fields
 
-from antigens.motifs import (
+from para_scope.motifs import (
     MOTIF_RULES,
     MOTIF_RULESET_VERSION,
     MotifObservation,
     find_motifs,
 )
-from antigens.numbering import number_sequence
+from para_scope.numbering import number_sequence
 
 TRASTUZUMAB_VH = (
     "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKG"

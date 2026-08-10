@@ -5,14 +5,14 @@ Key test: verify that CDR-H3 never matches against CDR-L3 (SPEC §20, CLAUDE.md)
 """
 
 import pytest
-from antigens.numbering import (
+from para_scope.numbering import (
     IMGT_GAP_CHARACTERS,
     extract_cdr_h3,
     extract_cdr_l3,
     extract_region_sequence,
     number_sequence,
 )
-from antigens.models import ComponentType, compare_eligibility, ComponentRelationship
+from para_scope.models import ComponentType, compare_eligibility, ComponentRelationship
 
 
 # Public trastuzumab heavy-chain variable domain

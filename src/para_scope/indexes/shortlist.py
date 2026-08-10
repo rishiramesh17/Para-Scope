@@ -33,7 +33,7 @@ being posed -- how much of the query is accounted for by this subject.
 from dataclasses import dataclass
 from typing import Optional
 
-from antigens.models import ComponentType
+from para_scope.models import ComponentType
 
 SHORTLIST_VERSION = "1.0.0"
 

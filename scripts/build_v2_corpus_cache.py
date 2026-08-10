@@ -12,7 +12,7 @@ is derived and gitignored (regenerable from the checksummed source snapshot).
 import time
 from pathlib import Path
 
-from antigens.persistence import ingest_sabdab2_cached, save_corpus_snapshot
+from para_scope.persistence import ingest_sabdab2_cached, save_corpus_snapshot
 
 CSV_PATH = Path("data/snapshots/sabdab2/splits_final/ab_split.csv")
 CACHE_DIR = Path("data/cache")

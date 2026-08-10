@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from antigens.corpus import Corpus, REGION_TO_COMPONENT_TYPE
-from antigens.indexes import ApproximateIndex, ExactIndex, PairIndex, PairRecord, PositionalIndex
-from antigens.indexes.approximate import ALIGNMENT_SCORING_VERSION
-from antigens.models import ComponentType
-from antigens.numbering import number_sequence
-from antigens.parsers.sabdab2 import REQUIRED_COLUMNS, parse_ab_split_csv
+from para_scope.corpus import Corpus, REGION_TO_COMPONENT_TYPE
+from para_scope.indexes import ApproximateIndex, ExactIndex, PairIndex, PairRecord, PositionalIndex
+from para_scope.indexes.approximate import ALIGNMENT_SCORING_VERSION
+from para_scope.models import ComponentType
+from para_scope.numbering import number_sequence
+from para_scope.parsers.sabdab2 import REQUIRED_COLUMNS, parse_ab_split_csv
 
 # Public trastuzumab heavy/light (kappa) variable domains -- same fixtures as test_numbering.py
 TRASTUZUMAB_VH = (

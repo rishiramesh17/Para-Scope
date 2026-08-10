@@ -22,9 +22,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from antigens.models import EvidenceStatus  # noqa: E402
-from antigens.persistence import load_corpus_snapshot  # noqa: E402
-from antigens.window_coverage import (  # noqa: E402
+from para_scope.models import EvidenceStatus  # noqa: E402
+from para_scope.persistence import load_corpus_snapshot  # noqa: E402
+from para_scope.window_coverage import (  # noqa: E402
     MINIMUM_WINDOWS_FOR_FRACTION,
     REFERENCE_SET_ID,
     WINDOW_COVERAGE_VERSION,

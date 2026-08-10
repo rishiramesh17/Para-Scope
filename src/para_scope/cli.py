@@ -1,14 +1,14 @@
-"""Command-line interface for Antigens."""
+"""Command-line interface for Para-Scope."""
 
 import sys
 import json
-from antigens.numbering import number_sequence
+from para_scope.numbering import number_sequence
 
 
 def main():
     """CLI entry point: number a sequence and report raw measurements."""
     if len(sys.argv) < 2:
-        print("Usage: antigens <sequence>")
+        print("Usage: para-scope <sequence>")
         sys.exit(1)
 
     sequence = sys.argv[1]
