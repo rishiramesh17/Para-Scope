@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-08-02, against commit on `main`, 303 tests passing.
+Last verified: 2026-08-29, against commit on `main`, 316 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–8 are complete.
@@ -25,6 +25,7 @@ artifact, not a time box. Gates 0–8 are complete.
 | 6 | Human repertoire window coverage | ✅ | `reports/GATE6_WINDOW_COVERAGE.md` |
 | 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
 | 8 | Pairing precedent | ✅ | `reports/GATE8_PAIRING_PRECEDENT.md` |
+| 9.0 | Germline reference data (milestone 1) | ✅ | `reports/GATE9_GERMLINE.md` |
 | **9** | **Empirical reference distributions** | **ready — blocks calibrated terms in Gates 7 and 8** | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
@@ -107,53 +108,48 @@ skip reasons. Every dimension added from here on should use it.
 
 ---
 
-## Germline reference data — unresolved, and larger than it looks
+## Germline reference data ✅ — resolved 2026-08-29
 
-`EvidenceClass.GERMLINE` is declared in `models.py` and **nothing populates it.**
-That is its only occurrence in the codebase. The numbering layer captures no V/D/J
-assignment either. ANARCII was checked directly: it has no germline capability of any
-kind — no V-gene, no allele, numbering only.
+*(was "unresolved, and larger than it looks" — resolved as Gate 9 milestone 1,
+full detail in `reports/GATE9_GERMLINE.md`)*
 
-**Why this outranks the `FULL_HEAVY` gap in impact:** Database-Relative Novelty is
-close to meaningless without a germline baseline. "Unusual" relative to what?
+**Source and license, verified rather than assumed:** OGRDB
+(https://ogrdb.airr-community.org) publishes its germline sets under **CC0**
+(public domain) — confirmed directly against
+`https://ogrdb.airr-community.org/render_page/licensing_statement.html`. This
+is a real difference from SAbDab2/Thera-SAbDab's `unspecified` license: the
+reference set is bundled inside the package
+(`src/para_scope/reference_data/germline/`, 353 V-gene alleles) rather than
+gitignored and fetched separately, the same way `promb` bundles its own data.
 
-### Options considered
+**Option B (build on the existing alignment engine) was correct.** No new
+alignment code — germline V genes are indexed into the same `ApproximateIndex`
+(SPEC §16.2) Gates 7 and 8 already use, typed by locus so comparison stays
+like-with-like automatically. `src/para_scope/germline.py`
+(`GERMLINE_VERSION = "1.0.0"`) mirrors `therapeutic_precedent.py` /
+`pairing_precedent.py`'s shape exactly.
 
-- **A — IgBLAST.** Field-standard, authoritative, what reviewers expect. But it is an
-  NCBI binary rather than a Python package: platform-specific install and separate
-  germline databases to configure. Reintroduces exactly the external-tool fragility
-  that rejecting BioPhi avoided.
-- **B — build on the existing alignment engine. ← recommended.** Germline V genes are
-  just sequences, and the project already has a pairwise aligner, a component index,
-  and IMGT numbering. Load a human germline V reference set (a few hundred sequences,
-  not gigabytes), index it, align the query. The best hit yields both the gene call
-  and **percent identity to nearest germline** — the standard measure of drift from
-  the inherited starting point, and precisely the baseline Novelty currently lacks.
-  Almost entirely code already written and tested. No new heavy dependency.
-- **C — a package bundling germline data** (SADIE, PyIR). Most either wrap IgBLAST
-  anyway or pull large dependency trees. Only worth revisiting if B proves harder
-  than expected.
+**Scope, deliberately reduced** (matches the option originally recommended
+here): human only (no camelid reference set — VHH is `UNSUPPORTED_COMPONENT`,
+not scored low), V gene only (no D/J call), one reference set (SPEC §11.2's
+never-silently-merge-two-germline-sets concern does not arise with only one —
+revisit if IMGT/GENE-DB is ever added alongside it).
 
-### Verify before implementing
+**New carried-forward item found while measuring:** ~70% of sampled VH/VL
+components return `NOT_FOUND` rather than a value, traced to a real length
+mismatch — a share of `ComponentType.VH`-typed components are ~210–240
+residues (roughly double a typical single VH domain) against a ~98-residue
+germline reference, so `query_coverage` caps near 0.44 regardless of match
+quality and never clears the 0.70 floor inherited unchanged from
+`indexes/approximate.py`. Not fixed here — that floor was calibrated for
+whole-domain-vs-whole-domain matching, and loosening it without calibration
+would repeat the exact mistake the existing "0.70 coverage floor ... not a
+calibrated value" note below already warns against. Gate 9 proper should give
+germline admissibility its own, separately calibrated floor.
 
-Germline source and license, which is step one and not yet done:
-
-- **IMGT/GENE-DB** — canonical, but restrictive redistribution terms. Same category of
-  problem as the `unspecified` license already flagged on Thera-SAbDab.
-- **OGRDB** — the AIRR Community's open germline database. Likely the cleaner
-  licensing story, which matters if this ever becomes public. **Lean toward OGRDB.**
-
-Per SPEC §11.2: do not silently merge OGRDB and IMGT assignments. Report reference
-source, germline-set version, best assignment under each set, and conflicting allele
-calls.
-
-### Open question
-
-Whether germline becomes its own gate ahead of Gate 9. It is a Gate 9 dependency:
-calibrating novelty without a germline baseline calibrates against nothing.
-A reduced scope — distance-to-nearest-germline-V only, no full V(D)J gene calls —
-captures most of the value for Novelty at meaningfully less work. The gene call is
-useful context, an add-on rather than the core.
+This unblocks Database-Relative Novelty's baseline and Gate 8's blocked
+`vh_vl_germline_pair_precedent` dimension (SPEC §35) — both were waiting on
+this, not on each other.
 
 ---
 
@@ -236,6 +232,9 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
   if labeled as such; indefensible if presented as repertoire percentiles.
 - **The 0.70 coverage floor** is a defensible default, not a calibrated value. Short
   frameworks (FR-H4, ~11 residues) and full domains plausibly warrant different floors.
+  Confirmed to also misfire for germline matching (see "Germline reference data" above):
+  ~210–240-residue VH components can never clear a query-coverage floor calibrated
+  against a ~98-residue germline gene, regardless of match quality.
 - **Recall was measured only at `top_k=10`.** Reporting more matches per component
   requires re-measuring; it will be worse.
 - **Coverage floor and shortlist threshold interact** (stage-1 recall 0.975 vs

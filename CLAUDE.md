@@ -145,7 +145,7 @@ Two invariants that cut across the code and are easy to break:
 ## Development commands
 
 ```bash
-.venv/bin/python -m pytest              # full suite (~67 s, 303 tests)
+.venv/bin/python -m pytest              # full suite (~60 s, 316 tests)
 .venv/bin/python -m pytest -q tests/    # unit only; tests/integration needs the corpus
 
 # Corpus rebuild (required after a fresh clone; ~8.5 min cold, ~7 s cached)
@@ -154,4 +154,6 @@ Two invariants that cut across the code and are easy to break:
 .venv/bin/python scripts/benchmark_two_stage_search.py   # shortlist recall/latency
 .venv/bin/python scripts/measure_window_coverage.py      # Gate 6 corpus distributions
 .venv/bin/python scripts/measure_therapeutic_precedent.py  # Gate 7 therapeutic coverage
+.venv/bin/python scripts/build_germline_reference.py     # rebuild the bundled OGRDB germline set
+.venv/bin/python scripts/measure_germline.py             # Gate 9 germline assignment sample
 ```

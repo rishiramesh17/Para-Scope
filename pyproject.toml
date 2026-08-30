@@ -28,5 +28,11 @@ para-scope = "para_scope.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# Gate 9. OGRDB human germline V-gene set, CC0 -- bundled the same way promb
+# bundles its own reference data, so germline assignment needs no separate
+# download step.
+para_scope = ["reference_data/germline/*.fasta"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
