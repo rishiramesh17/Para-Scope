@@ -82,6 +82,11 @@ from para_scope.construct_format import (
     parse_format,
 )
 from para_scope.features import STANDARD_AMINO_ACIDS
+from para_scope.short_component import (
+    NULL_MEASUREMENT_ID,
+    SHORT_TYPES,
+    compute_short_component_evidence,
+)
 from para_scope.numbering import (
     compute_sequence_checksum,
     normalize_query_to_variable_domain,
@@ -231,6 +236,11 @@ class TherapeuticPrecedentResult:
     scoring_version: str = ALIGNMENT_SCORING_VERSION
     calibration_version: str = CALIBRATION_VERSION
     reason: Optional[str] = None
+    # SPEC S21 chance correction, present only for short components.
+    short_component: Optional[object] = None
+    # Which match the composite's six terms were taken from, so the score is
+    # attributable to a real record rather than to an aggregate of several.
+    scoring_match_id: Optional[str] = None
     limitations: list[str] = field(default_factory=list)
     disclaimer: str = THERAPEUTIC_DISCLAIMER
 
@@ -260,6 +270,21 @@ def _build_match(
     shortlisted: bool = False,
 ) -> TherapeuticMatch:
     arms = _arms_containing(therapeutic, record_id)
+
+    # A sub-region component (a CDR or framework) is referenced by no arm: arms
+    # name the variable-domain records they contributed. The arm-level facts --
+    # whether the arm is directly paired, whether it has a structure record --
+    # still apply to a region that came from that arm, so a single-armed
+    # therapeutic lends them to its regions.
+    #
+    # A multi-armed therapeutic deliberately does not. Its two arms are two
+    # specificities with different structures, and nothing here records which arm
+    # a given CDR came from, so attributing arm 1's structure to a region that may
+    # have come from arm 2 would be exactly the cross-arm error ingestion already
+    # refuses to make. Those regions keep `None`, which reads as "not established"
+    # rather than "absent".
+    if not arms and len(therapeutic.arms) == 1:
+        arms = list(therapeutic.arms)
 
     # Pairing is per arm and requires both chains from the same source record. An
     # arm with only a heavy chain is not "unpaired evidence to be joined later";
@@ -436,6 +461,79 @@ def _computable_terms(matches: list[TherapeuticMatch]) -> dict[str, Optional[flo
     }
 
 
+# SPEC S26's composite weights, verbatim. Sum to 1.00.
+SPEC_26_WEIGHTS: dict[str, float] = {
+    "calibrated_component_similarity": 0.45,
+    "coverage": 0.15,
+    "exact_component_class_confirmation": 0.15,
+    "format_relevance": 0.10,
+    "direct_pair_or_structure_support": 0.10,
+    "metadata_completeness": 0.05,
+}
+
+# Bump when the composite's inputs or assembly change. Separate from the engine
+# version because a weight change alters every stored score without altering any
+# measurement.
+SCORE_FORMULA_VERSION = "1.0.0-provisional"
+
+
+def _short_component_for(corpus, component_type, query, matches, calibration):
+    """SPEC S21 chance-corrected evidence for a short component, or None."""
+    from para_scope.calibration import length_band
+
+    try:
+        stratum = f"{component_type.value}|len={length_band(len(query.strip()))}"
+    except ValueError:
+        return None
+    distribution = calibration.get(NULL_MEASUREMENT_ID, stratum)
+    if distribution is None:
+        return compute_short_component_evidence(
+            component_type, query, [], null_values=None, null_stratum=stratum
+        )
+
+    subjects = []
+    for match in matches:
+        record = corpus.get(match.matched_record_id)
+        if record is not None:
+            subjects.append((record.record_id, record.sequence))
+    return compute_short_component_evidence(
+        component_type, query, subjects,
+        null_values=distribution.values, null_stratum=stratum,
+    )
+
+
+def _spec26_composite(
+    terms: dict[str, Optional[float]]
+) -> tuple[Optional[float], EvidenceStatus, str]:
+    """
+    SPEC S26's provisional composite, or an explicit refusal.
+
+    Returns (score, status, reason). The score is emitted only when **all six**
+    terms are present. Dropping a term and renormalising over the rest would
+    produce a number that looks complete while answering a narrower question --
+    the exact failure CLAUDE.md prohibits for the S37 index, and it is no more
+    acceptable here.
+    """
+    missing = sorted(k for k in SPEC_26_WEIGHTS if terms.get(k) is None)
+    if missing:
+        return (
+            None,
+            EvidenceStatus.INSUFFICIENT_EVIDENCE,
+            f"SPEC S26's composite needs all six weighted terms; "
+            f"{missing} could not be computed "
+            f"({sum(SPEC_26_WEIGHTS[k] for k in missing):.2f} of the weight). "
+            f"No composite is emitted: renormalising over the remaining terms "
+            f"would report a narrower question's answer as though it were S26's.",
+        )
+    score = 100.0 * sum(SPEC_26_WEIGHTS[k] * terms[k] for k in SPEC_26_WEIGHTS)
+    return (
+        score,
+        EvidenceStatus.AVAILABLE,
+        f"SPEC S26 provisional composite over all six weighted terms "
+        f"(formula {SCORE_FORMULA_VERSION}).",
+    )
+
+
 # Measurement id of the reference distribution that calibrates a match's
 # similarity. Named here so the producer (scripts/build_calibration.py) and the
 # consumer cannot drift apart silently -- a typo would look like missing data.
@@ -585,15 +683,6 @@ def compute_therapeutic_precedent(
             match.format_relevance = compute_format_relevance(
                 declared_format, parse_format(match.format_raw)
             )
-        if any(
-            m.format_relevance is not None
-            and m.format_relevance.status is EvidenceStatus.AVAILABLE
-            for m in matches
-        ):
-            result.blocked_terms = {
-                k: v for k, v in result.blocked_terms.items() if k != "format_relevance"
-            }
-
     # SPEC S19 Layer 2. Attached per match rather than once per result because
     # each match may be a different component class (a related-class hit is
     # percentiled against its own population, never the query's).
@@ -612,24 +701,72 @@ def compute_therapeutic_precedent(
                     else None
                 ),
             )
-        # The term is only unblocked where a percentile actually came back. A
-        # supplied calibration that holds no distribution for this stratum leaves
-        # the term blocked, with the percentile's own reason explaining why.
-        if any(
-            m.calibrated_similarity is not None
-            and m.calibrated_similarity.status is EvidenceStatus.AVAILABLE
-            for m in matches
-        ):
-            result.blocked_terms = {
-                k: v for k, v in result.blocked_terms.items()
-                if k != "calibrated_component_similarity"
-            }
-
     result.matches = matches
     result.raw_match_count = len(matches)
     result.therapeutics_matched = len({m.therapeutic_name for m in matches})
     result.best_global_identity = max(m.global_identity for m in matches)
-    result.computable_terms = _computable_terms(matches)
+    # SPEC S26's composite describes one match, so every term must come from the
+    # *same* match -- mixing terms across matches would describe no match that
+    # exists. Taking them from the single best match by identity proved brittle:
+    # one match's uncomparable format or absent structure flag withheld the whole
+    # composite even when other matches were fully characterised. So the composite
+    # uses the best match among those supplying all six terms, and says so.
+    def _terms_for(match) -> dict:
+        per_match = _computable_terms([match])
+        if (
+            match.calibrated_similarity is not None
+            and match.calibrated_similarity.status is EvidenceStatus.AVAILABLE
+        ):
+            per_match["calibrated_component_similarity"] = (
+                match.calibrated_similarity.percentile / 100.0
+            )
+        elif component_type in SHORT_TYPES and calibration is not None:
+            # Short components are excluded from alignment, so they have no
+            # similarity percentile. SPEC S21's empirical null is their
+            # calibration: the observed positional identity placed in the
+            # distribution unrelated components of the same type and length reach.
+            if result.short_component is None:
+                result.short_component = _short_component_for(
+                    corpus, component_type, query, matches, calibration
+                )
+            per_match["calibrated_component_similarity"] = (
+                result.short_component.calibrated_similarity
+                if result.short_component is not None else None
+            )
+        else:
+            per_match["calibrated_component_similarity"] = None
+
+        if (
+            match.format_relevance is not None
+            and match.format_relevance.status is EvidenceStatus.AVAILABLE
+        ):
+            per_match["format_relevance"] = match.format_relevance.relevance
+        else:
+            per_match["format_relevance"] = None
+        return per_match
+
+    ranked = sorted(matches, key=lambda m: m.rank_key, reverse=True)
+    terms = _terms_for(ranked[0])
+    scoring_match = ranked[0]
+    for candidate in ranked:
+        candidate_terms = _terms_for(candidate)
+        if all(candidate_terms.get(k) is not None for k in SPEC_26_WEIGHTS):
+            terms = candidate_terms
+            scoring_match = candidate
+            break
+
+    result.computable_terms = terms
+    result.scoring_match_id = scoring_match.matched_record_id
+
+    # Blocked terms are derived from the composite's *actual* inputs, not from
+    # whether any match anywhere could supply them. Clearing a block because some
+    # match had the term, while the composite reads another, produced a directly
+    # contradictory result: blocked_terms == [] beside a withheld score.
+    for term in list(result.blocked_terms):
+        if terms.get(term) is not None:
+            del result.blocked_terms[term]
+
+    result.score, result.score_status, result.score_reason = _spec26_composite(terms)
     result.status = EvidenceStatus.AVAILABLE
 
     if any(m.shortlisted for m in matches):

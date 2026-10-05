@@ -274,12 +274,19 @@ class TestCompositeScoreIsWithheld:
         corpus = _corpus(tmp_path, [_row()])
         result = compute_therapeutic_precedent(corpus, ComponentType.VH, TRASTUZUMAB_VH)
 
+        # All six SPEC S26 keys are always present since Gate 11; the two that
+        # need a calibration or a declared format are None rather than absent,
+        # so a reader can tell "not computed" from "not part of the formula".
         assert set(result.computable_terms) == {
             "coverage",
             "exact_component_class_confirmation",
             "direct_pair_or_structure_support",
             "metadata_completeness",
+            "calibrated_component_similarity",
+            "format_relevance",
         }
+        assert result.computable_terms["calibrated_component_similarity"] is None
+        assert result.computable_terms["format_relevance"] is None
         assert result.computable_terms["coverage"] == 1.0
         assert result.computable_terms["exact_component_class_confirmation"] == 1.0
 
@@ -302,8 +309,11 @@ class TestCompositeScoreIsWithheld:
         assert len(result.blocked_terms) == 2
         assert "format_relevance" in result.blocked_terms
         # The withheld reason must name both, not just the calibrated one.
-        assert "format relevance" in result.score_reason.lower()
-        assert "calibrated component similarity" in result.score_reason.lower()
+        # The reason names both missing terms by their key (Gate 11 made the
+        # composite emittable, so the reason now lists exactly which of the six
+        # inputs was absent rather than describing them in prose).
+        assert "format_relevance" in result.score_reason
+        assert "calibrated_component_similarity" in result.score_reason
 
     def test_weights_are_not_applied_to_the_partial_terms(self, tmp_path):
         """A weighted partial sum would look like a composite that merely scored low."""

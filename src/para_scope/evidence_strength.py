@@ -145,6 +145,16 @@ class DimensionReport:
     metadata_fields_present: int = 0
     metadata_fields_expected: int = 0
 
+    # Identities of the parent antibodies this dimension matched, when known.
+    #
+    # SPEC S15 requires one antibody to be counted once. Summing
+    # `parent_antibodies` across dimensions double-counts an antibody matched via
+    # both therapeutic precedent and pairing -- the normal case, since a
+    # therapeutic that has also been crystallised appears in both. When every
+    # contributing dimension supplies identifiers the union is used; when any does
+    # not, the sum is used and the inability to deduplicate is recorded.
+    parent_identifiers: frozenset[str] = frozenset()
+
     best_identity: Optional[float] = None
     calibrated: bool = False
     # Terms this dimension could not compute, and why. Surfaced as missing
@@ -243,6 +253,9 @@ class EvidenceSufficiency:
     therapeutic_records: int = 0
     dimensions_with_evidence: int = 0
     dimensions_attempted: int = 0
+    # False means `parent_antibodies` is a sum across dimensions and may count one
+    # antibody more than once. Reported rather than silently assumed either way.
+    parent_antibodies_deduplicated: bool = False
 
     # Evidence classes are reported separately and never summed (SPEC §17).
     by_evidence_class: dict[str, int] = field(default_factory=dict)
@@ -338,6 +351,7 @@ def from_therapeutic_precedent(result, name: str = "therapeutic_precedent") -> D
         # One therapeutic may contribute several matched records; the therapeutic
         # is the parent entity (SPEC §15).
         parent_antibodies=result.therapeutics_matched,
+        parent_identifiers=frozenset(m.therapeutic_name for m in result.matches),
         therapeutic_records=result.therapeutics_matched,
         structure_linked_records=structure_linked,
         metadata_fields_present=present,
@@ -375,6 +389,14 @@ def from_pairing_precedent(result, name: str = "pairing_precedent") -> Dimension
         reason=result.reason,
         independent_records=result.raw_observation_count,
         parent_antibodies=result.pairs_matched,
+        # A pair's parents are the therapeutics documenting it where named, and
+        # otherwise the pair's own record ids -- a structure-only pair is still a
+        # distinct parent antibody even with no drug name.
+        parent_identifiers=frozenset(
+            name
+            for match in result.matches
+            for name in (match.therapeutic_names or [f"pair:{match.heavy_record_id}"])
+        ),
         paired_records=result.raw_observation_count,
         structure_linked_records=structure_linked,
         therapeutic_records=therapeutic_records,
@@ -599,9 +621,19 @@ def assess_evidence(
         dimensions_attempted=len(dimensions),
         dimensions_with_evidence=sum(1 for d in dimensions if d.produced_evidence),
     )
+    # Deduplicate parent antibodies across dimensions when possible (SPEC S15).
+    contributing = [d for d in dimensions if d.parent_antibodies]
+    deduplicated = bool(contributing) and all(d.parent_identifiers for d in contributing)
+    if deduplicated:
+        sufficiency.parent_antibodies = len(
+            frozenset().union(*(d.parent_identifiers for d in contributing))
+        )
+        sufficiency.parent_antibodies_deduplicated = True
+
     for dimension in dimensions:
         sufficiency.independent_records += dimension.independent_records
-        sufficiency.parent_antibodies += dimension.parent_antibodies
+        if not deduplicated:
+            sufficiency.parent_antibodies += dimension.parent_antibodies
         sufficiency.paired_records += dimension.paired_records
         sufficiency.structure_linked_records += dimension.structure_linked_records
         sufficiency.therapeutic_records += dimension.therapeutic_records
@@ -624,6 +656,14 @@ def assess_evidence(
         grade_rationale=rationale,
         grade_blocked_reason=blocked,
     )
+
+    if contributing and not deduplicated:
+        report.limitations.append(
+            "Parent-antibody count is a sum across dimensions and may count one "
+            "antibody more than once: at least one contributing dimension supplied "
+            "no parent identifiers, so cross-dimension deduplication was not "
+            "possible (SPEC S15 wants one antibody counted once)."
+        )
 
     if metadata.fraction is None:
         report.limitations.append(

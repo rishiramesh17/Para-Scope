@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-10-05, against commit on `main`, 500 tests passing.
+Last verified: 2026-10-05, against commit on `main`, 581 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–10.5 are complete. Gate 11 (final profile assembly) remains.
+artifact, not a time box. **Gates 0–11 are complete.** Version 2 core is assembled end to end.
 
 ---
 
@@ -30,7 +30,8 @@ artifact, not a time box. Gates 0–10.5 are complete. Gate 11 (final profile as
 | **9** | **Empirical reference distributions (Layer 2)** | ✅ | `reports/GATE9_CALIBRATION.md` |
 | 10 | Evidence strength / confidence / completeness | ✅ | `reports/GATE10_EVIDENCE_STRENGTH.md` |
 | 10.5 | Construct format vocabulary + declared format input | ✅ | `reports/GATE10_5_FORMAT_VOCABULARY.md` |
-| 11 | Final profile assembly | — | SPEC §37 |
+| 11 | Final profile assembly | ✅ | `reports/GATE11_PROFILE_ASSEMBLY.md` |
+| 21 | Short-component chance correction (forced by 11) | ✅ | `src/para_scope/short_component.py` |
 | V | Verification layer (adversarial audit + grounding boundary) | ✅ | `reports/ADVERSARIAL_AUDIT.md` |
 
 Corpus under test: 46,727 components, `corpus_schema_version` 6.0.0,
@@ -574,6 +575,50 @@ Gate 10.
 
 **21.4% of strata (128 of 599) are below `MINIMUM_SAMPLE_SIZE = 30`** and are
 unreportable by design.
+
+## Gate 11 — whole-construct profile assembly ✅
+
+`src/para_scope/profile.py`. Full detail in `reports/GATE11_PROFILE_ASSEMBLY.md`.
+
+**The index emits and withholds correctly on real data.** Four candidates from one
+real whole-mAb therapeutic: self → **80.8** at 95% coverage (16/16 components);
+mutated ×10 → withheld at 81%; ×30 → withheld at 59%; random → withheld at 0%.
+Coverage falls monotonically with novelty, and a novel candidate gets *no index and
+a reason*, never a low one. The self-match is 80.8 rather than 100 because
+structure-linked precedent is 0.0 and the geometric mean refuses to hide it —
+§37's stated purpose.
+
+**The property this gate protects:** with uniform scores of 90, the index is
+**90.0 at 100% coverage and 90.0 at 42% coverage**. §37's mean divides by the
+weight that contributed, so an incomplete index is numerically identical to a
+complete one. `evidence_coverage`, computed against the *full* weight set, is the
+only thing that distinguishes them, and a test pins it.
+
+**SPEC §21 had to be built here.** The first run scored 2/16 components: CDRs are
+excluded from alignment (correctly — §21 needs a length-matched null first), so no
+similarity distribution existed for them, so §26's composite was withheld, so
+CDR-H3 had no score, so §37 withheld the index. Gate 9 had recorded §21 as not
+done; it turned out to be load-bearing for the platform's headline number.
+`short_component.py` implements the spec's empirical p-value, BH q-values,
+position-aware similarity and length compatibility. 18 null strata built from
+*pairs of real unrelated components* (random strings would flatter every match).
+The stratification justifies itself: unrelated CDR-H3s at len 15–17 share **0.133**
+median identity, unrelated CDR-L1s at 12–14 share **0.583**.
+
+**SPEC §26's composite now emits** — all six terms exist for the first time — and
+only when all six are present.
+
+**Three defects found while assembling**, each in the report: `blocked_terms`
+contradicting the withheld score; one match's gaps withholding the whole composite
+(now uses the best *fully characterised* match, recorded in `scoring_match_id`);
+and sub-region components unable to see their own arm's pairing/structure facts
+(single-armed therapeutics now lend them, multi-armed deliberately do not — the
+cross-arm error ingestion already refuses).
+
+**Biggest remaining gap:** Constant/Fc never contributes a score, so no real
+candidate reaches `FULL_CONSTRUCT` scope and every real index carries the
+variable-domain qualifier. The components exist (Gate 9.1 recovered 1,643); they
+are not wired to a score.
 
 ## Gate 10.5 — construct format vocabulary ✅
 

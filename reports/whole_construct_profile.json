@@ -1,0 +1,1099 @@
+{
+ "generated_at": "2026-10-05T20:09:38.232997+00:00",
+ "corpus_schema_version": "6.0.0",
+ "candidate_source": "Abagovomab",
+ "cases": {
+  "self": {
+   "components": [
+    {
+     "component_type": "VH",
+     "slot": "VH",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 1.0,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H1",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 4,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H1",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 10,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-H1 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-H2",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H2",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 1.0,
+     "therapeutics_matched": 4,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-H2 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-H3",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 6,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H3",
+     "slot": "CDR-H3",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 1.0,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-H3 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-H4",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 1014,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "VL-kappa",
+     "slot": "VL",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 1.0,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "FR-L1",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L1",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 10,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-L1 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-L2",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 5,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L2",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 8,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-L2 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-L3",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 1.0,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L3",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 1.0,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-L3 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-L4",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 559,
+     "blocked_terms": {},
+     "limitations": []
+    }
+   ],
+   "index": {
+    "status": "available",
+    "index": 80.84128627200406,
+    "display": "Comparative Evidence Index (variable domain only): 80.8 (evidence coverage 95%, weight set 1.0.0-provisional-igg-like)",
+    "coverage_scope": "VARIABLE_DOMAIN_ONLY",
+    "displayed_name": "Comparative Evidence Index (variable domain only)",
+    "components_present": [
+     "VH",
+     "VL",
+     "CDR-H3",
+     "CDR-H1 and H2 combined",
+     "CDR-L1, L2, and L3 combined",
+     "Heavy frameworks",
+     "Light frameworks",
+     "Observed heavy-light pairing",
+     "Structure-linked experimental precedent"
+    ],
+    "components_missing": {
+     "Constant/Fc region": "no evidence was supplied for this slot"
+    },
+    "weight_set_version": "1.0.0-provisional-igg-like",
+    "format_class": "igg_like",
+    "bottleneck_slot": "Structure-linked experimental precedent",
+    "bottleneck_score": 0.0,
+    "evidence_coverage": 0.9500000000000001,
+    "evidence_confidence": "B",
+    "observed_pairing_status": "available",
+    "assembly_validation_status": "passed",
+    "missing_critical_evidence": {},
+    "profile_version": "1.0.0",
+    "vocabulary_version": "1.2.0",
+    "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+    "gating_failures": [],
+    "limitations": [
+     "The index rests on 95% of its weight set. The geometric mean divides by the weight that contributed, so an incomplete index is numerically indistinguishable from a complete one -- this coverage figure is the only thing that distinguishes them. Absent slots: ['Constant/Fc region'].",
+     "Variable-domain scope: no constant-region evidence contributed, so this index says nothing about the constant region or the construct as a whole. The name carries the qualifier for that reason."
+    ]
+   },
+   "strength": {
+    "input_completeness": {
+     "expected": [
+      "VH",
+      "VL"
+     ],
+     "supplied": [
+      "VH",
+      "VL"
+     ],
+     "missing": {},
+     "not_applicable": {}
+    },
+    "analysis_completion": {
+     "attempted": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "completed": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "failed": {},
+     "infrastructural_failures": {}
+    },
+    "metadata_completeness": {
+     "fields_present": 12,
+     "fields_expected": 13,
+     "by_dimension": {
+      "therapeutic_precedent": [
+       10,
+       10
+      ],
+      "pairing_precedent": [
+       2,
+       3
+      ]
+     }
+    },
+    "evidence_sufficiency": {
+     "independent_records": 3,
+     "parent_antibodies": 2,
+     "paired_records": 1,
+     "structure_linked_records": 0,
+     "therapeutic_records": 3,
+     "dimensions_with_evidence": 2,
+     "dimensions_attempted": 2,
+     "parent_antibodies_deduplicated": true,
+     "by_evidence_class": {
+      "therapeutic_precedent": 2,
+      "direct_paired_chain": 1
+     },
+     "missing_evidence": {
+      "pairing_precedent.vh_vl_germline_pair_precedent": "germline V-gene assignment now exists (para_scope.germline, OGRDB human reference) and returns a gene call for every variable domain tested, so the original blocker -- that nothing populated EvidenceClass.GERMLINE -- is resolved. What remains is the reference table this dimension actually needs: which VH germline gene is observed paired with which VL germline gene, and how often, across the 12,032 observed pairs. Building it means germline-assigning every unique paired variable domain, which is a separate offline job (one alignment per reference allele per component). Until that table exists this dimension reports nothing rather than guessing from the per-chain gene calls, which would describe gene co-occurrence in a candidate rather than precedent in a database",
+      "pairing_precedent.combined_cdr_pattern_similarity": "CDRs are short components and require a length-matched empirical null model before any similarity over them is meaningful (SPEC S21). That null is Gate 9 work. Exact CDR identity within a matched pair needs no chance correction and is reported per match instead"
+     },
+     "study_count": null,
+     "subject_count": null,
+     "bootstrap_interval": null,
+     "unavailable_layer4_fields": {
+      "study_count": "Neither SAbDab2 nor Thera-SAbDab records a study identifier distinct from the structure or therapeutic entry, so independent studies cannot be counted without conflating them with records.",
+      "subject_count": "Subject-level provenance exists only in repertoire sources (OAS). promb's bundled reference is pre-aggregated at a 10%-of-subjects threshold and exposes no per-subject counts.",
+      "bootstrap_interval": "Requires resampling a reference distribution per query. The calibration artifact stores full observations so this is computable, but it is not computed here and an interval has not been validated."
+     }
+    },
+    "grade": "B",
+    "grade_rationale": "Identity 1.000 repeated across 2 parent antibodies, but no structure-linked experimental context.",
+    "grade_blocked_reason": null,
+    "engine_version": "1.0.0",
+    "grade_threshold_version": "1.1.0-provisional",
+    "disclaimer": "An evidence grade describes the strength and provenance of the database evidence found, not the candidate. Grade A means direct, curated, same-component experimental evidence exists -- it is not a statement that the candidate will fold, express, pair, bind, be stable, be safe, be effective, or succeed.",
+    "limitations": [
+     "Grade thresholds are provisional (version 1.1.0-provisional). SPEC \u00a719 requires them to be benchmarked; no external ground truth of evidence quality exists to benchmark against, so what has been verified is that the bands separate real corpus cases rather than collapsing onto one grade."
+    ]
+   },
+   "declared_format": "Whole mAb",
+   "profile_version": "1.0.0",
+   "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+   "limitations": []
+  },
+  "mutated_10": {
+   "components": [
+    {
+     "component_type": "VH",
+     "slot": "VH",
+     "status": "available",
+     "score": 97.75,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 0.9159663865546218,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H1",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 91.75000000000001,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 0.96,
+     "therapeutics_matched": 4,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H1",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H2",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 88.18750000000001,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 0.9411764705882353,
+     "therapeutics_matched": 3,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H2",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 1.0,
+     "therapeutics_matched": 4,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-H2 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-H3",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 67.5625,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 0.868421052631579,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H3",
+     "slot": "CDR-H3",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H4",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 83.69938884644766,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 0.9090909090909091,
+     "therapeutics_matched": 992,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "VL-kappa",
+     "slot": "VL",
+     "status": "available",
+     "score": 76.75,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.9065420560747663,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "FR-L1",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 59.5,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.8076923076923077,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L1",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 10,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-L1 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-L2",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 5,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L2",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "available",
+     "score": 99.96253122398002,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 8,
+     "blocked_terms": {},
+     "limitations": [
+      "Alignment search not performed: CDR-L2 is too short for unmodified alignment scoring; it needs a length-matched empirical null model (SPEC S21), which Gate 9 supplies. Exact matches are still reported."
+     ]
+    },
+    {
+     "component_type": "FR-L3",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 75.8125,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.9444444444444444,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L3",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-L4",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 100.0,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "A",
+     "best_identity": 1.0,
+     "therapeutics_matched": 559,
+     "blocked_terms": {},
+     "limitations": []
+    }
+   ],
+   "index": {
+    "status": "insufficient_evidence",
+    "index": null,
+    "display": "Insufficient evidence for a whole-construct index.",
+    "coverage_scope": "VARIABLE_DOMAIN_ONLY",
+    "displayed_name": "Comparative Evidence Index (variable domain only)",
+    "components_present": [
+     "VH",
+     "VL",
+     "CDR-H1 and H2 combined",
+     "CDR-L1, L2, and L3 combined",
+     "Heavy frameworks",
+     "Light frameworks",
+     "Observed heavy-light pairing",
+     "Structure-linked experimental precedent"
+    ],
+    "components_missing": {
+     "CDR-H3": "no evidence was supplied for this slot",
+     "Constant/Fc region": "no evidence was supplied for this slot"
+    },
+    "weight_set_version": "1.0.0-provisional-igg-like",
+    "format_class": "igg_like",
+    "bottleneck_slot": null,
+    "bottleneck_score": null,
+    "evidence_coverage": 0.81,
+    "evidence_confidence": "B",
+    "observed_pairing_status": "available",
+    "assembly_validation_status": "passed",
+    "missing_critical_evidence": {
+     "CDR-H3": "not supplied"
+    },
+    "profile_version": "1.0.0",
+    "vocabulary_version": "1.2.0",
+    "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+    "gating_failures": [
+     "Required components for igg_like at VARIABLE_DOMAIN_ONLY scope are missing or unscored: ['CDR-H3']."
+    ],
+    "limitations": []
+   },
+   "strength": {
+    "input_completeness": {
+     "expected": [
+      "VH",
+      "VL"
+     ],
+     "supplied": [
+      "VH",
+      "VL"
+     ],
+     "missing": {},
+     "not_applicable": {}
+    },
+    "analysis_completion": {
+     "attempted": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "completed": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "failed": {},
+     "infrastructural_failures": {}
+    },
+    "metadata_completeness": {
+     "fields_present": 12,
+     "fields_expected": 13,
+     "by_dimension": {
+      "therapeutic_precedent": [
+       10,
+       10
+      ],
+      "pairing_precedent": [
+       2,
+       3
+      ]
+     }
+    },
+    "evidence_sufficiency": {
+     "independent_records": 3,
+     "parent_antibodies": 2,
+     "paired_records": 1,
+     "structure_linked_records": 0,
+     "therapeutic_records": 3,
+     "dimensions_with_evidence": 2,
+     "dimensions_attempted": 2,
+     "parent_antibodies_deduplicated": true,
+     "by_evidence_class": {
+      "therapeutic_precedent": 2,
+      "direct_paired_chain": 1
+     },
+     "missing_evidence": {
+      "pairing_precedent.vh_vl_germline_pair_precedent": "germline V-gene assignment now exists (para_scope.germline, OGRDB human reference) and returns a gene call for every variable domain tested, so the original blocker -- that nothing populated EvidenceClass.GERMLINE -- is resolved. What remains is the reference table this dimension actually needs: which VH germline gene is observed paired with which VL germline gene, and how often, across the 12,032 observed pairs. Building it means germline-assigning every unique paired variable domain, which is a separate offline job (one alignment per reference allele per component). Until that table exists this dimension reports nothing rather than guessing from the per-chain gene calls, which would describe gene co-occurrence in a candidate rather than precedent in a database",
+      "pairing_precedent.combined_cdr_pattern_similarity": "CDRs are short components and require a length-matched empirical null model before any similarity over them is meaningful (SPEC S21). That null is Gate 9 work. Exact CDR identity within a matched pair needs no chance correction and is reported per match instead"
+     },
+     "study_count": null,
+     "subject_count": null,
+     "bootstrap_interval": null,
+     "unavailable_layer4_fields": {
+      "study_count": "Neither SAbDab2 nor Thera-SAbDab records a study identifier distinct from the structure or therapeutic entry, so independent studies cannot be counted without conflating them with records.",
+      "subject_count": "Subject-level provenance exists only in repertoire sources (OAS). promb's bundled reference is pre-aggregated at a 10%-of-subjects threshold and exposes no per-subject counts.",
+      "bootstrap_interval": "Requires resampling a reference distribution per query. The calibration artifact stores full observations so this is computable, but it is not computed here and an interval has not been validated."
+     }
+    },
+    "grade": "B",
+    "grade_rationale": "Identity 0.916 repeated across 2 parent antibodies, but no structure-linked experimental context.",
+    "grade_blocked_reason": null,
+    "engine_version": "1.0.0",
+    "grade_threshold_version": "1.1.0-provisional",
+    "disclaimer": "An evidence grade describes the strength and provenance of the database evidence found, not the candidate. Grade A means direct, curated, same-component experimental evidence exists -- it is not a statement that the candidate will fold, express, pair, bind, be stable, be safe, be effective, or succeed.",
+    "limitations": [
+     "Grade thresholds are provisional (version 1.1.0-provisional). SPEC \u00a719 requires them to be benchmarked; no external ground truth of evidence quality exists to benchmark against, so what has been verified is that the bands separate real corpus cases rather than collapsing onto one grade."
+    ]
+   },
+   "declared_format": "Whole mAb",
+   "profile_version": "1.0.0",
+   "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+   "limitations": []
+  },
+  "mutated_30": {
+   "components": [
+    {
+     "component_type": "VH",
+     "slot": "VH",
+     "status": "available",
+     "score": 59.121848739495796,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.7478991596638656,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H1",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 55.862500000000004,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.8,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H1",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H2",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 56.49999999999999,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.7647058823529411,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H2",
+     "slot": "CDR-H1 and H2 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H3",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 56.6875,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.7105263157894737,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-H3",
+     "slot": "CDR-H3",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-H4",
+     "slot": "Heavy frameworks",
+     "status": "available",
+     "score": 63.46829640947288,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.8181818181818182,
+     "therapeutics_matched": 228,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "VL-kappa",
+     "slot": "VL",
+     "status": "available",
+     "score": 55.44072164948454,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "D",
+     "best_identity": 0.6915887850467289,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": [
+      "Compared the numbered variable domain (97 residues) rather than the full 107-residue input: removed 10 residue(s) C-terminal to the variable domain. Corpus variable-domain components hold the V-domain only, so comparing the whole chain would measure constant-region and flanking similarity too."
+     ]
+    },
+    {
+     "component_type": "FR-L1",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 54.033653846153854,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "D",
+     "best_identity": 0.6538461538461539,
+     "therapeutics_matched": 2,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L1",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-L2",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 69.73529411764706,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "B",
+     "best_identity": 0.8823529411764706,
+     "therapeutics_matched": 5,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L2",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    },
+    {
+     "component_type": "FR-L3",
+     "slot": "Light frameworks",
+     "status": "available",
+     "score": 56.125,
+     "score_reason": "SPEC S26 provisional composite over all six weighted terms (formula 1.0.0-provisional).",
+     "grade": "C",
+     "best_identity": 0.8055555555555556,
+     "therapeutics_matched": 1,
+     "blocked_terms": {},
+     "limitations": []
+    },
+    {
+     "component_type": "CDR-L3",
+     "slot": "CDR-L1, L2, and L3 combined",
+     "status": "not_found",
+     "score": null,
+     "score_reason": "SPEC S26's composite weights calibrated component similarity at 0.45 and format relevance at 0.10. Neither term exists yet, so no composite is emitted; raw measurements and the four computable sub-terms are reported instead.",
+     "grade": "Insufficient",
+     "best_identity": null,
+     "therapeutics_matched": 0,
+     "blocked_terms": {
+      "calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing"
+     },
+     "limitations": []
+    }
+   ],
+   "index": {
+    "status": "insufficient_evidence",
+    "index": null,
+    "display": "Insufficient evidence for a whole-construct index.",
+    "coverage_scope": "VARIABLE_DOMAIN_ONLY",
+    "displayed_name": "Comparative Evidence Index (variable domain only)",
+    "components_present": [
+     "VH",
+     "VL",
+     "Heavy frameworks",
+     "Light frameworks",
+     "Observed heavy-light pairing",
+     "Structure-linked experimental precedent"
+    ],
+    "components_missing": {
+     "CDR-H3": "no evidence was supplied for this slot",
+     "CDR-H1 and H2 combined": "no evidence was supplied for this slot",
+     "CDR-L1, L2, and L3 combined": "no evidence was supplied for this slot",
+     "Constant/Fc region": "no evidence was supplied for this slot"
+    },
+    "weight_set_version": "1.0.0-provisional-igg-like",
+    "format_class": "igg_like",
+    "bottleneck_slot": null,
+    "bottleneck_score": null,
+    "evidence_coverage": 0.5900000000000001,
+    "evidence_confidence": "C",
+    "observed_pairing_status": "available",
+    "assembly_validation_status": "passed",
+    "missing_critical_evidence": {
+     "CDR-H3": "not supplied"
+    },
+    "profile_version": "1.0.0",
+    "vocabulary_version": "1.2.0",
+    "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+    "gating_failures": [
+     "Required components for igg_like at VARIABLE_DOMAIN_ONLY scope are missing or unscored: ['CDR-H3']."
+    ],
+    "limitations": []
+   },
+   "strength": {
+    "input_completeness": {
+     "expected": [
+      "VH",
+      "VL"
+     ],
+     "supplied": [
+      "VH",
+      "VL"
+     ],
+     "missing": {},
+     "not_applicable": {}
+    },
+    "analysis_completion": {
+     "attempted": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "completed": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "failed": {},
+     "infrastructural_failures": {}
+    },
+    "metadata_completeness": {
+     "fields_present": 7,
+     "fields_expected": 8,
+     "by_dimension": {
+      "therapeutic_precedent": [
+       5,
+       5
+      ],
+      "pairing_precedent": [
+       2,
+       3
+      ]
+     }
+    },
+    "evidence_sufficiency": {
+     "independent_records": 2,
+     "parent_antibodies": 1,
+     "paired_records": 1,
+     "structure_linked_records": 0,
+     "therapeutic_records": 2,
+     "dimensions_with_evidence": 2,
+     "dimensions_attempted": 2,
+     "parent_antibodies_deduplicated": true,
+     "by_evidence_class": {
+      "therapeutic_precedent": 1,
+      "direct_paired_chain": 1
+     },
+     "missing_evidence": {
+      "pairing_precedent.vh_vl_germline_pair_precedent": "germline V-gene assignment now exists (para_scope.germline, OGRDB human reference) and returns a gene call for every variable domain tested, so the original blocker -- that nothing populated EvidenceClass.GERMLINE -- is resolved. What remains is the reference table this dimension actually needs: which VH germline gene is observed paired with which VL germline gene, and how often, across the 12,032 observed pairs. Building it means germline-assigning every unique paired variable domain, which is a separate offline job (one alignment per reference allele per component). Until that table exists this dimension reports nothing rather than guessing from the per-chain gene calls, which would describe gene co-occurrence in a candidate rather than precedent in a database",
+      "pairing_precedent.combined_cdr_pattern_similarity": "CDRs are short components and require a length-matched empirical null model before any similarity over them is meaningful (SPEC S21). That null is Gate 9 work. Exact CDR identity within a matched pair needs no chance correction and is reported per match instead"
+     },
+     "study_count": null,
+     "subject_count": null,
+     "bootstrap_interval": null,
+     "unavailable_layer4_fields": {
+      "study_count": "Neither SAbDab2 nor Thera-SAbDab records a study identifier distinct from the structure or therapeutic entry, so independent studies cannot be counted without conflating them with records.",
+      "subject_count": "Subject-level provenance exists only in repertoire sources (OAS). promb's bundled reference is pre-aggregated at a 10%-of-subjects threshold and exposes no per-subject counts.",
+      "bootstrap_interval": "Requires resampling a reference distribution per query. The calibration artifact stores full observations so this is computable, but it is not computed here and an interval has not been validated."
+     }
+    },
+    "grade": "C",
+    "grade_rationale": "Valid sequence precedent at identity 0.748, resting on 1 parent antibody(s) with limited experimental, structural, or pairing context.",
+    "grade_blocked_reason": null,
+    "engine_version": "1.0.0",
+    "grade_threshold_version": "1.1.0-provisional",
+    "disclaimer": "An evidence grade describes the strength and provenance of the database evidence found, not the candidate. Grade A means direct, curated, same-component experimental evidence exists -- it is not a statement that the candidate will fold, express, pair, bind, be stable, be safe, be effective, or succeed.",
+    "limitations": [
+     "Grade thresholds are provisional (version 1.1.0-provisional). SPEC \u00a719 requires them to be benchmarked; no external ground truth of evidence quality exists to benchmark against, so what has been verified is that the bands separate real corpus cases rather than collapsing onto one grade."
+    ]
+   },
+   "declared_format": "Whole mAb",
+   "profile_version": "1.0.0",
+   "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+   "limitations": []
+  },
+  "novel": {
+   "components": [],
+   "index": {
+    "status": "insufficient_evidence",
+    "index": null,
+    "display": "Insufficient evidence for a whole-construct index.",
+    "coverage_scope": "VARIABLE_DOMAIN_ONLY",
+    "displayed_name": "Comparative Evidence Index (variable domain only)",
+    "components_present": [],
+    "components_missing": {
+     "VH": "no evidence was supplied for this slot",
+     "VL": "no evidence was supplied for this slot",
+     "CDR-H3": "no evidence was supplied for this slot",
+     "CDR-H1 and H2 combined": "no evidence was supplied for this slot",
+     "CDR-L1, L2, and L3 combined": "no evidence was supplied for this slot",
+     "Heavy frameworks": "no evidence was supplied for this slot",
+     "Light frameworks": "no evidence was supplied for this slot",
+     "Observed heavy-light pairing": "not_found: no score was produced for this construct-level slot",
+     "Structure-linked experimental precedent": "not_found: no score was produced for this construct-level slot",
+     "Constant/Fc region": "no evidence was supplied for this slot"
+    },
+    "weight_set_version": "1.0.0-provisional-igg-like",
+    "format_class": "igg_like",
+    "bottleneck_slot": null,
+    "bottleneck_score": null,
+    "evidence_coverage": 0.0,
+    "evidence_confidence": "Insufficient",
+    "observed_pairing_status": "not_found",
+    "assembly_validation_status": "passed",
+    "missing_critical_evidence": {
+     "CDR-H3": "not supplied",
+     "VH": "not supplied",
+     "VL": "not supplied"
+    },
+    "profile_version": "1.0.0",
+    "vocabulary_version": "1.2.0",
+    "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+    "gating_failures": [
+     "Required components for igg_like at VARIABLE_DOMAIN_ONLY scope are missing or unscored: ['CDR-H3', 'VH', 'VL'].",
+     "Minimum evidence sufficiency is not met: the evidence strength assessment graded Insufficient.",
+     "No component carries a valid, gradeable score."
+    ],
+    "limitations": []
+   },
+   "strength": {
+    "input_completeness": {
+     "expected": [
+      "VH",
+      "VL"
+     ],
+     "supplied": [
+      "VH",
+      "VL"
+     ],
+     "missing": {},
+     "not_applicable": {}
+    },
+    "analysis_completion": {
+     "attempted": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "completed": [
+      "therapeutic_precedent",
+      "pairing_precedent"
+     ],
+     "failed": {},
+     "infrastructural_failures": {}
+    },
+    "metadata_completeness": {
+     "fields_present": 0,
+     "fields_expected": 0,
+     "by_dimension": {}
+    },
+    "evidence_sufficiency": {
+     "independent_records": 0,
+     "parent_antibodies": 0,
+     "paired_records": 0,
+     "structure_linked_records": 0,
+     "therapeutic_records": 0,
+     "dimensions_with_evidence": 0,
+     "dimensions_attempted": 2,
+     "parent_antibodies_deduplicated": false,
+     "by_evidence_class": {},
+     "missing_evidence": {
+      "therapeutic_precedent.calibrated_component_similarity": "requires the empirical reference distributions built in Gate 9 (SPEC S19 layers 2-4); raw global_identity is reported on each match meanwhile",
+      "therapeutic_precedent.format_relevance": "requires the candidate's declared construct format and a controlled vocabulary over Thera-SAbDab's free-text Format column (120+ distinct values); each match reports its format verbatim instead. NOT Gate 9 work and unowned: the declared format is an input the submission schema does not collect, and the vocabulary is curation, so neither falls out of building reference distributions. Gate 9 therefore does not unblock the composite by itself -- 0.10 of SPEC S26's weight remains missing",
+      "pairing_precedent.vh_vl_germline_pair_precedent": "germline V-gene assignment now exists (para_scope.germline, OGRDB human reference) and returns a gene call for every variable domain tested, so the original blocker -- that nothing populated EvidenceClass.GERMLINE -- is resolved. What remains is the reference table this dimension actually needs: which VH germline gene is observed paired with which VL germline gene, and how often, across the 12,032 observed pairs. Building it means germline-assigning every unique paired variable domain, which is a separate offline job (one alignment per reference allele per component). Until that table exists this dimension reports nothing rather than guessing from the per-chain gene calls, which would describe gene co-occurrence in a candidate rather than precedent in a database",
+      "pairing_precedent.combined_cdr_pattern_similarity": "CDRs are short components and require a length-matched empirical null model before any similarity over them is meaningful (SPEC S21). That null is Gate 9 work. Exact CDR identity within a matched pair needs no chance correction and is reported per match instead",
+      "pairing_precedent.format_relevance": "requires the candidate's declared construct format, which the submission schema does not collect, plus a controlled vocabulary over a free-text column. Owned by Gate 10.5 -- the same term blocks SPEC S26"
+     },
+     "study_count": null,
+     "subject_count": null,
+     "bootstrap_interval": null,
+     "unavailable_layer4_fields": {
+      "study_count": "Neither SAbDab2 nor Thera-SAbDab records a study identifier distinct from the structure or therapeutic entry, so independent studies cannot be counted without conflating them with records.",
+      "subject_count": "Subject-level provenance exists only in repertoire sources (OAS). promb's bundled reference is pre-aggregated at a 10%-of-subjects threshold and exposes no per-subject counts.",
+      "bootstrap_interval": "Requires resampling a reference distribution per query. The calibration artifact stores full observations so this is computable, but it is not computed here and an interval has not been validated."
+     }
+    },
+    "grade": "Insufficient",
+    "grade_rationale": "No dimension returned an evidence record (0 of 2 dimensions produced evidence).",
+    "grade_blocked_reason": null,
+    "engine_version": "1.0.0",
+    "grade_threshold_version": "1.1.0-provisional",
+    "disclaimer": "An evidence grade describes the strength and provenance of the database evidence found, not the candidate. Grade A means direct, curated, same-component experimental evidence exists -- it is not a statement that the candidate will fold, express, pair, bind, be stable, be safe, be effective, or succeed.",
+    "limitations": [
+     "No matched record carried annotatable metadata, so metadata completeness is undefined rather than zero.",
+     "Grade thresholds are provisional (version 1.1.0-provisional). SPEC \u00a719 requires them to be benchmarked; no external ground truth of evidence quality exists to benchmark against, so what has been verified is that the bands separate real corpus cases rather than collapsing onto one grade."
+    ]
+   },
+   "declared_format": "Whole mAb",
+   "profile_version": "1.0.0",
+   "disclaimer": "This index summarizes comparative database evidence. It is not a probability of folding, expression, pairing, binding, stability, manufacturability, safety, efficacy, or experimental success.",
+   "limitations": []
+  }
+ }
+}
