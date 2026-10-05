@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-10-04, against commit on `main`, 414 tests passing.
+Last verified: 2026-10-04, against commit on `main`, 453 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–9 are complete (Layer 2; Layers 3–4 remain).
+artifact, not a time box. Gates 0–10 are complete. Gate 10.5 then Gate 11 remain.
 
 ---
 
@@ -28,7 +28,7 @@ artifact, not a time box. Gates 0–9 are complete (Layer 2; Layers 3–4 remain
 | 9.0 | Germline reference data (milestone 1) | ✅ | `reports/GATE9_GERMLINE.md` |
 | 9.1 | Variable/constant component split | ✅ | `reports/GATE9_COMPONENT_SPLIT.md` |
 | **9** | **Empirical reference distributions (Layer 2)** | ✅ | `reports/GATE9_CALIBRATION.md` |
-| 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
+| 10 | Evidence strength / confidence / completeness | ✅ | `reports/GATE10_EVIDENCE_STRENGTH.md` |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
 | V | Verification layer (adversarial audit + grounding boundary) | ✅ | `reports/ADVERSARIAL_AUDIT.md` |
@@ -574,6 +574,51 @@ Gate 10.
 
 **21.4% of strata (128 of 599) are below `MINIMUM_SAMPLE_SIZE = 30`** and are
 unreportable by design.
+
+## Gate 10 — evidence strength, confidence, completeness ✅
+
+SPEC §28's four-field split plus SPEC §19 Layers 3–4.
+`src/para_scope/evidence_strength.py`. Full detail in
+`reports/GATE10_EVIDENCE_STRENGTH.md`.
+
+**There is no aggregate completeness field, and a test asserts none exists.**
+Input completeness, analysis completion, metadata completeness, and evidence
+sufficiency have different causes and different remedies; averaging them tells a
+user nothing about which one to act on.
+
+**An outage never becomes a biological grade.** Infrastructural failure yields
+`Insufficient` with a retry reason, never `D`. A module returning `NOT_FOUND`
+*completed successfully* — counting that as a failure would turn an answer into an
+outage.
+
+**Grade benchmark (120 real candidates):** A 20.0% · B 18.3% · C 15.0% · D 0.0% ·
+Insufficient 46.7%. Three findings:
+
+1. The first D definition (low identity only) scored 0/120 because
+   `GRADE_C_MIN_IDENTITY` coincides with the admissibility coverage floor. SPEC §19
+   actually defines D as *"sparse, or poorly annotated"* — two routes not
+   implemented. Added; thresholds `1.0.0` → `1.1.0-provisional`.
+2. **D is still unreachable, and that is a property of the data**: metadata
+   fraction never drops below 0.800 and identity never below 0.703 across all 120.
+   Both sources are too well curated to produce poorly annotated evidence.
+   Recorded rather than fixed — lowering thresholds until D appears would fit the
+   scale to the data. The band is kept (spec-mandated, would fire on a sparser
+   source) and tested on constructed input so it is not dead code.
+3. The 46.7% Insufficient rate is dominated by VHH (36/40), because only 31 VHH
+   components in the corpus carry a therapeutic link. Correct, and exactly why
+   `Insufficient` must be distinguishable from `D`.
+
+**"Benchmarked and versioned" (SPEC §19):** versioned yes, and separately from the
+engine. Benchmarked no — there is no external ground truth of evidence quality, so
+the version string says `-provisional`. What was verified is the weaker honest
+property: the bands separate real cases rather than collapsing onto one.
+
+**Carried forward:** `parent_antibodies` is summed across dimensions, so a
+candidate matching the same antibody via both therapeutic precedent and pairing
+counts it twice. SPEC §15 wants one antibody counted once; this module delegates
+that to callers and no caller does it yet. Also: Grade A requires a
+structure-linked record, reachable only via Thera-SAbDab entries cross-referenced
+to PDB.
 
 ## Verification layer ✅ — adversarial audit + grounding boundary
 
