@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-10-04, against commit on `main`, 453 tests passing.
+Last verified: 2026-10-05, against commit on `main`, 500 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–10 are complete. Gate 10.5 then Gate 11 remain.
+artifact, not a time box. Gates 0–10.5 are complete. Gate 11 (final profile assembly) remains.
 
 ---
 
@@ -29,7 +29,7 @@ artifact, not a time box. Gates 0–10 are complete. Gate 10.5 then Gate 11 rema
 | 9.1 | Variable/constant component split | ✅ | `reports/GATE9_COMPONENT_SPLIT.md` |
 | **9** | **Empirical reference distributions (Layer 2)** | ✅ | `reports/GATE9_CALIBRATION.md` |
 | 10 | Evidence strength / confidence / completeness | ✅ | `reports/GATE10_EVIDENCE_STRENGTH.md` |
-| **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
+| 10.5 | Construct format vocabulary + declared format input | ✅ | `reports/GATE10_5_FORMAT_VOCABULARY.md` |
 | 11 | Final profile assembly | — | SPEC §37 |
 | V | Verification layer (adversarial audit + grounding boundary) | ✅ | `reports/ADVERSARIAL_AUDIT.md` |
 
@@ -554,7 +554,7 @@ loaded read-only.
 **Deliberately still blocked** — the distinction matters because each has a
 different owner:
 
-- `format_relevance` (Gates 7, 8) — Gate 10.5. Needs a declared-format input the
+- `format_relevance` (Gates 7, 8) — **RESOLVED by Gate 10.5 (2026-10-05).** Originally: Gate 10.5. Needs a declared-format input the
   submission schema does not collect. 0.10 of SPEC §26's weight.
 - `vh_vl_germline_pair_precedent` (Gate 8) — germline assignment now exists, so the
   original blocker is resolved. What remains is a VH-gene × VL-gene co-occurrence
@@ -574,6 +574,42 @@ Gate 10.
 
 **21.4% of strata (128 of 599) are below `MINIMUM_SAMPLE_SIZE = 30`** and are
 unreportable by design.
+
+## Gate 10.5 — construct format vocabulary ✅
+
+`src/para_scope/construct_format.py`, vocabulary `1.2.0`. Full detail in
+`reports/GATE10_5_FORMAT_VOCABULARY.md`.
+
+**Both format-relevance terms are unblocked**, verified end-to-end: §26's
+`blocked_terms` goes `['format_relevance']` → `[]` with a declared format, and
+§35's `blocked_dimensions` loses it likewise.
+
+**The reframe:** a flat classifier over 104 free-text values is infeasible, but the
+column encodes four *independent* axes — `"Bispecific Whole mAb ADC"` is three
+facts. Measured row coverage: specificity 100%, architecture 98.1%,
+modification 100%; species' `UNSTATED` is a real answer rather than a failure. Row
+coverage is the honest figure since 70.6% of the column is one string.
+
+**Relevance tracks the declaration**, which is the sanity check that matters: mean
+relevance across the whole column is 0.881 for a declared `Whole mAb`, 0.651 for
+`Bispecific Whole mAb`, 0.390 for `scFv`, 0.374 for `Nanobody`.
+
+**Three defects found in my own first cut**, each recorded in the report:
+architecture-uncomparable pairs scoring 1.0 off modifier agreement (fixed by
+`REQUIRED_AXIS`); weights that let an architecture mismatch score *better* than two
+modifier mismatches (fixed, architecture 0.55 > the other three combined); and
+`MAB_UNSPECIFIED` scored as a definite mismatch when the text merely declines to
+say (now unresolved for comparison, which accounts for the 7.1% of rows that score
+nothing).
+
+**Source-data defect:** one row carries `"Lenzilumab"` — a drug name — in the
+`Format` column. Correctly uncomparable, deliberately not special-cased.
+
+**Carried forward:** an undeclared species leaves cross-species matches
+unpenalised (`Whole mAb` vs `Canine Whole mAb` = 1.000) — the remedy is declaring
+species, since defaulting a candidate to human would be a claim. `DeclaredFormat`
+is a parameter on both compute functions but **nothing collects it from a user
+yet**; Gate 11 is where a submission actually arrives.
 
 ## Gate 10 — evidence strength, confidence, completeness ✅
 

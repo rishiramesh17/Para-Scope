@@ -1,0 +1,185 @@
+{
+ "generated_at": "2026-10-05T19:36:06.488103+00:00",
+ "source_file": "data/snapshots/thera_sabdab/TheraSAbDab_SeqStruc_OnlineDownload.csv",
+ "vocabulary_version": "1.2.0",
+ "axis_weights": {
+  "architecture": 0.55,
+  "specificity": 0.25,
+  "modification": 0.12,
+  "species": 0.08
+ },
+ "total_rows": 1133,
+ "distinct_values": 104,
+ "per_axis": {
+  "specificity": {
+   "rows_resolved": 1133,
+   "rows_total": 1133,
+   "row_coverage": 1.0,
+   "distinct_values_unresolved": 0,
+   "distinct_values_total": 104,
+   "distribution": {
+    "monospecific": 966,
+    "bispecific": 139,
+    "trispecific": 22,
+    "tetraspecific": 6
+   }
+  },
+  "architecture": {
+   "rows_resolved": 1112,
+   "rows_total": 1133,
+   "row_coverage": 0.9814651368049426,
+   "distinct_values_unresolved": 20,
+   "distinct_values_total": 104,
+   "distribution": {
+    "whole_mab": 908,
+    "mab_unspecified": 60,
+    "mixed": 49,
+    "scfv": 44,
+    "unknown": 21,
+    "fab": 17,
+    "single_domain": 17,
+    "fusion_protein": 14,
+    "dual_variable_domain": 3
+   }
+  },
+  "modification": {
+   "rows_resolved": 1133,
+   "rows_total": 1133,
+   "row_coverage": 1.0,
+   "distinct_values_unresolved": 0,
+   "distinct_values_total": 104,
+   "distribution": {
+    "none": 1021,
+    "antibody_drug_conjugate": 58,
+    "fusion": 46,
+    "radiolabelled": 8
+   }
+  }
+ },
+ "species_distribution": {
+  "unstated": 1117,
+  "canine": 11,
+  "feline": 3,
+  "mouse": 2
+ },
+ "declared_format_probes": {
+  "Whole mAb": {
+   "statuses": {
+    "available": 1052,
+    "insufficient_evidence": 81
+   },
+   "rows_scored": 1052,
+   "row_fraction_scored": 0.9285083848190644,
+   "mean_relevance": 0.880641428335262
+  },
+  "scFv": {
+   "statuses": {
+    "available": 1052,
+    "insufficient_evidence": 81
+   },
+   "rows_scored": 1052,
+   "row_fraction_scored": 0.9285083848190644,
+   "mean_relevance": 0.3896511820135559
+  },
+  "Nanobody": {
+   "statuses": {
+    "available": 1052,
+    "insufficient_evidence": 81
+   },
+   "rows_scored": 1052,
+   "row_fraction_scored": 0.9285083848190644,
+   "mean_relevance": 0.3743077368160026
+  },
+  "Bispecific Whole mAb": {
+   "statuses": {
+    "available": 1052,
+    "insufficient_evidence": 81
+   },
+   "rows_scored": 1052,
+   "row_fraction_scored": 0.9285083848190644,
+   "mean_relevance": 0.6507480575301703
+  }
+ },
+ "architecture_unresolved": [
+  {
+   "rows": 2,
+   "value": "Trispecific and Pentavalent (sc-5-VH); Bispecific entry"
+  },
+  {
+   "rows": 1,
+   "value": "VH-CH2-CH3"
+  },
+  {
+   "rows": 1,
+   "value": "Trispecific and Pentavalent (sc-5-VH); Monospecific entry"
+  },
+  {
+   "rows": 1,
+   "value": "Trispecific Mixed mAbs; Monospecific entry"
+  },
+  {
+   "rows": 1,
+   "value": "Trispecific Mixed mAbs; Bispecific entry"
+  },
+  {
+   "rows": 1,
+   "value": "Lenzilumab"
+  },
+  {
+   "rows": 1,
+   "value": "Fv Fusion"
+  },
+  {
+   "rows": 1,
+   "value": "Dimerised heavy domain (VH-h-CH2-CH3-CHS dimer)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Tandem VH Domains fused to G1 Constant Domain"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Mixed Format with Domain Crossover"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Mixed Domains (VH-G1CH1-h)-H-gamma1_L-kappa-L-kappa)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Mixed Domains (L-kappa-H-gamma1_[VH-G1(CH1-h)]_L-kappa)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Mixed Domains ((V-kappa-G4CH1-G1h-H-gamma1_L-kappa)_L-kappa)]_(H-gamma1_L-kappa)); Trispecific through dual targetting Fv2"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Mixed Domains ((H-gamma4_L-kappa)_VH-G4(h-CH2-CH3))"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific Homodimer (VK-VH-VL'-VH'; Tandem diabody)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific (half G4-kappa_G4(VH-h-CH2-CH3))"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific (VH-VK-VH'-VL Homodimer)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific (L-kappa-H-gamma1_G1(VH-CH1-h)_L-kappa)"
+  },
+  {
+   "rows": 1,
+   "value": "Bispecific (H-gamma1-VH-G1CH1h_L-kappa)_L-kappa-G1hCH2CH3"
+  },
+  {
+   "rows": 1,
+   "value": "Bispec Mixed Domains (Fv entry)"
+  }
+ ]
+}

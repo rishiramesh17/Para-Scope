@@ -51,6 +51,12 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from para_scope.corpus import Corpus
+from para_scope.construct_format import (
+    ConstructFormat,
+    FormatRelevance,
+    compute_format_relevance,
+    parse_format,
+)
 from para_scope.features import STANDARD_AMINO_ACIDS
 from para_scope.indexes.approximate import (
     ALIGNMENT_SCORING_VERSION,
@@ -196,6 +202,10 @@ class PairMatch:
     development_statuses: list[str] = field(default_factory=list)
     highest_clinical_trials: list[str] = field(default_factory=list)
     construct_formats: list[str] = field(default_factory=list)
+    # SPEC S35 format relevance (Gate 10.5). A pair can rest on records of
+    # several formats, so the best relevance across them is reported -- the
+    # most comparable record is the one the evidence actually rests on.
+    format_relevance: Optional[FormatRelevance] = None
 
     pdb_ids: list[str] = field(default_factory=list)
     structure_methods: list[str] = field(default_factory=list)
@@ -527,6 +537,7 @@ def compute_pairing_precedent(
     shortlist_limit: Optional[int] = None,
     min_query_coverage: float = MIN_QUERY_COVERAGE,
     min_subject_coverage: float = MIN_SUBJECT_COVERAGE,
+    declared_format: Optional[ConstructFormat] = None,
 ) -> PairingPrecedentResult:
     """
     Observed pairing precedent for a candidate heavy/light chain pair (SPEC S35.1).
@@ -628,6 +639,32 @@ def compute_pairing_precedent(
     matches = _paired_candidates(corpus, heavy_hits, light_hits)
     matches.sort(key=lambda m: (m.rank_key, m.heavy_record_id), reverse=True)
     result.matches = matches[:top_k]
+
+    # SPEC S35 format relevance (Gate 10.5). A pair may rest on records of several
+    # formats; the best relevance among them is taken, because the evidence rests
+    # on whichever record is most comparable, not on an average of them.
+    if declared_format is not None:
+        for match in result.matches:
+            scored = [
+                compute_format_relevance(declared_format, parse_format(raw))
+                for raw in match.construct_formats
+            ]
+            usable = [r for r in scored if r.status is EvidenceStatus.AVAILABLE]
+            if usable:
+                match.format_relevance = max(usable, key=lambda r: r.relevance)
+            elif scored:
+                # Every candidate format was uncomparable. Keep one so the reason
+                # survives rather than leaving the field bare.
+                match.format_relevance = scored[0]
+        if any(
+            m.format_relevance is not None
+            and m.format_relevance.status is EvidenceStatus.AVAILABLE
+            for m in result.matches
+        ):
+            result.blocked_dimensions = {
+                k: v for k, v in result.blocked_dimensions.items()
+                if k != "format_relevance"
+            }
 
     if not matches:
         result.status = EvidenceStatus.NOT_FOUND

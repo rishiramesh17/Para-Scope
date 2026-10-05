@@ -75,6 +75,12 @@ from para_scope.models import (
     compare_eligibility,
 )
 from para_scope.calibration import CalibratedPercentile, CalibrationSet
+from para_scope.construct_format import (
+    ConstructFormat,
+    FormatRelevance,
+    compute_format_relevance,
+    parse_format,
+)
 from para_scope.features import STANDARD_AMINO_ACIDS
 from para_scope.numbering import (
     compute_sequence_checksum,
@@ -138,6 +144,13 @@ class TherapeuticMatch:
     # but holds no distribution for this stratum. Those are different facts and are
     # not collapsed.
     calibrated_similarity: Optional[CalibratedPercentile] = None
+
+    # SPEC S26's 0.10 format-relevance term (Gate 10.5). None when the submission
+    # declared no construct format -- the normal case until the schema field is
+    # populated -- and a FormatRelevance carrying INSUFFICIENT_EVIDENCE when a
+    # format was declared but the axes could not be compared. Different facts,
+    # not collapsed.
+    format_relevance: Optional[FormatRelevance] = None
 
     # Curated therapeutic record (SPEC S26 display fields).
     alternative_names: list[str] = field(default_factory=list)
@@ -460,6 +473,7 @@ def compute_therapeutic_precedent(
     min_query_coverage: float = MIN_QUERY_COVERAGE,
     min_subject_coverage: float = MIN_SUBJECT_COVERAGE,
     calibration: Optional[CalibrationSet] = None,
+    declared_format: Optional[ConstructFormat] = None,
 ) -> TherapeuticPrecedentResult:
     """
     Gather therapeutic-precedent evidence for one component (SPEC S26).
@@ -563,6 +577,22 @@ def compute_therapeutic_precedent(
     # between two runs over the same snapshot.
     matches.sort(key=lambda m: m.therapeutic_name)
     matches.sort(key=lambda m: m.rank_key, reverse=True)
+
+    # SPEC S26 format relevance (Gate 10.5). Each match carries its own format, so
+    # relevance is per match; the candidate's declared format is the fixed side.
+    if declared_format is not None:
+        for match in matches:
+            match.format_relevance = compute_format_relevance(
+                declared_format, parse_format(match.format_raw)
+            )
+        if any(
+            m.format_relevance is not None
+            and m.format_relevance.status is EvidenceStatus.AVAILABLE
+            for m in matches
+        ):
+            result.blocked_terms = {
+                k: v for k, v in result.blocked_terms.items() if k != "format_relevance"
+            }
 
     # SPEC S19 Layer 2. Attached per match rather than once per result because
     # each match may be a different component class (a related-class hit is
