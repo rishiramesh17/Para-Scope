@@ -75,6 +75,7 @@ from para_scope.models import (
     compare_eligibility,
 )
 from para_scope.calibration import CalibratedPercentile, CalibrationSet
+from para_scope.features import STANDARD_AMINO_ACIDS
 from para_scope.numbering import (
     compute_sequence_checksum,
     normalize_query_to_variable_domain,
@@ -495,6 +496,23 @@ def compute_therapeutic_precedent(
         result.status = EvidenceStatus.UNSUPPORTED_COMPONENT
         result.reason = "empty sequence"
         return result
+    # Reject anything that is not a protein sequence *before* searching. Without
+    # this the search simply finds nothing and the result reads NOT_FOUND --
+    # which asserts "the database holds no precedent for this", a claim about the
+    # corpus. For "1234567890" or a gap-containing string the true statement is
+    # that it was never a valid query. Found by the adversarial audit;
+    # germline.py already validated this way, so the two disagreed.
+    unknown = sorted(set(query) - set(STANDARD_AMINO_ACIDS))
+    if unknown:
+        result.status = EvidenceStatus.UNSUPPORTED_COMPONENT
+        result.reason = (
+            f"Sequence contains characters outside the 20 standard amino acids: "
+            f"{unknown}. The input is not modified to make it searchable, and no "
+            f"search is run -- a NOT_FOUND here would claim the corpus lacks "
+            f"precedent for something that is not a sequence."
+        )
+        return result
+
 
     if not corpus.therapeutics:
         result.status = EvidenceStatus.DATABASE_UNAVAILABLE

@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-10-04, against commit on `main`, 350 tests passing.
+Last verified: 2026-10-04, against commit on `main`, 414 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–9 are complete (Layer 2; Layers 3–4 remain).
@@ -31,6 +31,7 @@ artifact, not a time box. Gates 0–9 are complete (Layer 2; Layers 3–4 remain
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
+| V | Verification layer (adversarial audit + grounding boundary) | ✅ | `reports/ADVERSARIAL_AUDIT.md` |
 
 Corpus under test: 46,727 components, `corpus_schema_version` 6.0.0,
 `CACHE_FORMAT_VERSION` 1.2.0.
@@ -573,6 +574,43 @@ Gate 10.
 
 **21.4% of strata (128 of 599) are below `MINIMUM_SAMPLE_SIZE = 30`** and are
 unreportable by design.
+
+## Verification layer ✅ — adversarial audit + grounding boundary
+
+Not a numbered gate; it cuts across all of them. `src/para_scope/verification/`.
+Full detail in `reports/ADVERSARIAL_AUDIT.md`.
+
+86/86 adversarial cases pass across 8 families; 0 prohibited claims, 0 crashes,
+1.000 citation coverage, 24 explicit refusals over 66 rendered answers.
+
+**Two defects found and fixed:**
+
+1. `NOT_FOUND` was returned for inputs that are not sequences at all (digits,
+   prose, gap characters). That asserts the corpus lacks precedent for something
+   that was never a valid query. `germline.py` already validated correctly, so
+   two modules disagreed. Both precedent modules now return
+   `UNSUPPORTED_COMPONENT` naming the offending characters.
+2. The prohibited-claim scanner blocked the platform's own *required* disclaimers
+   ("Window coverage is not an immunogenicity score"). Fixed with
+   disclaimer-context detection, narrow by design: a meta-statement about a
+   measurement passes, a statement about the candidate does not, and a later
+   disclaimer cannot launder an earlier claim.
+
+**Honest limits, carried forward:**
+
+- The truncation ladder is **vacuous** — all six abstained, because only 6 of 18
+  truncation cases score at all (coverage floor correctly rejects them).
+  "truncation 18/18" means recorded, not that monotonicity was verified.
+- The audit **did not reproduce** the original Gate 1 fragmentary-alignment
+  defect: the therapeutic subset (1,118 VH) is too small for a coincidental short
+  perfect alignment, which needed the full 5,473. Detector validity therefore
+  rests on unit negative controls (`TestDetectorsActuallyFire`), not on an
+  end-to-end reproduction. That is a weaker position and is recorded as one.
+- `"E"` (single residue) still returns `not_found`. The candidate fix — reject a
+  declared variable domain ANARCII cannot number — was not applied because it
+  would also reject the ~0.46% of legitimate chains that fail numbering, and that
+  trade was not measured.
+- No language model was tested. The guarantee is in the boundary, not a prompt.
 
 ## Minor leftovers
 

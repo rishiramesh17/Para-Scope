@@ -11,6 +11,8 @@ low score. Those are the failure modes that produce a confident wrong answer,
 which is worse here than producing none.
 """
 
+import pytest
+
 import csv
 from pathlib import Path
 
@@ -532,3 +534,46 @@ class TestProvenanceAndFraming:
         assert no_struct.matches[0].structure_ids == []
         assert has_struct.matches[0].has_structure_record is True
         assert has_struct.matches[0].structure_ids == ["1n8z:BA"]
+
+class TestNonSequenceInputIsUnsupportedNotNotFound:
+    """
+    Regression, found by the adversarial audit (reports/ADVERSARIAL_AUDIT.md).
+
+    NOT_FOUND asserts "the corpus holds no precedent for this" -- a claim about the
+    database. For a string that is not a sequence the true statement is that it was
+    never a valid query. Five of eight degenerate inputs returned NOT_FOUND before
+    this check existed, and germline.py already validated the other way, so the
+    two modules disagreed about the same input.
+    """
+
+    @pytest.mark.parametrize("sequence,label", [
+        ("1234567890123456789012345678901234567890", "digits"),
+        ("not a protein sequence at all", "prose"),
+        ("EVQLVESGGG-LVQPGGSLRLSCAAS", "gap character"),
+        ("EVQLVESGGG*LVQPGGSLRLSCAAS", "stop codon character"),
+        ("EVQLXESGGGLVQPGGSLRLSCAASBFNIKDTYIHZVRQ", "ambiguity codes"),
+    ])
+    def test_non_sequence_input_is_unsupported_component(self, tmp_path, sequence, label):
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(
+            corpus, ComponentType.VH, sequence, shortlist_limit=None,
+        )
+        assert result.status is EvidenceStatus.UNSUPPORTED_COMPONENT, label
+        assert result.reason is not None
+        assert result.matches == []
+
+    def test_the_reason_names_the_offending_characters(self, tmp_path):
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(
+            corpus, ComponentType.VH, "EVQLVESGGG-LVQ", shortlist_limit=None,
+        )
+        assert "-" in result.reason
+
+    def test_input_is_not_silently_repaired_to_make_it_searchable(self, tmp_path):
+        """Stripping the offending character would search a sequence nobody submitted."""
+        corpus = _corpus(tmp_path, [_row()])
+        result = compute_therapeutic_precedent(
+            corpus, ComponentType.VH, "EVQLVESGGG-LVQ", shortlist_limit=None,
+        )
+        assert result.matches == []
+        assert "not modified" in result.reason

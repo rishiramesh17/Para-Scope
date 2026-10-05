@@ -1,0 +1,1097 @@
+{
+ "generated_at": "2026-10-05T02:10:23.466901+00:00",
+ "corpus_schema_version": "6.0.0",
+ "calibration_loaded": true,
+ "adversarial_version": "1.0.0",
+ "grounding_version": "1.0.0",
+ "harness_version": "1.0.0",
+ "totals": {
+  "cases": 86,
+  "passed": 86,
+  "failed": 0,
+  "crashes": 0,
+  "prohibited_claims": 0,
+  "citation_coverage": 1.0,
+  "uncited_claims": 0,
+  "answers_rendered": 66,
+  "explicit_refusals": 24
+ },
+ "by_family": {
+  "chimera": {
+   "passed": 3,
+   "total": 3
+  },
+  "degenerate": {
+   "passed": 8,
+   "total": 8
+  },
+  "duplicated": {
+   "passed": 6,
+   "total": 6
+  },
+  "point_mutant": {
+   "passed": 24,
+   "total": 24
+  },
+  "point_mutant_ladder": {
+   "passed": 6,
+   "total": 6
+  },
+  "random": {
+   "passed": 3,
+   "total": 3
+  },
+  "reversed": {
+   "passed": 6,
+   "total": 6
+  },
+  "shuffled": {
+   "passed": 6,
+   "total": 6
+  },
+  "truncation": {
+   "passed": 18,
+   "total": 18
+  },
+  "truncation_ladder": {
+   "passed": 6,
+   "total": 6
+  }
+ },
+ "outcomes": [
+  {
+   "case_id": "random_60",
+   "family": "random",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "no match reported at all",
+   "measurements": {
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "random_120",
+   "family": "random",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "no match reported at all",
+   "measurements": {
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "random_240",
+   "family": "random",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "no match reported at all",
+   "measurements": {
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "degenerate_empty",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_whitespace_only",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_digits",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_ambiguity_codes",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_lowercase_junk",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_single_residue",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=not_found reason=set matches=0",
+   "measurements": {
+    "status": "not_found",
+    "match_count": 0,
+    "expected_unsupported": false
+   }
+  },
+  {
+   "case_id": "degenerate_stop_codon_character",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "degenerate_gap_characters",
+   "family": "degenerate",
+   "expectation": "explicit_status_not_a_number",
+   "passed": true,
+   "detail": "status=unsupported_component reason=set matches=0",
+   "measurements": {
+    "status": "unsupported_component",
+    "match_count": 0,
+    "expected_unsupported": true
+   }
+  },
+  {
+   "case_id": "shuffled_p0",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "best 0.194 vs parent 1.000",
+   "measurements": {
+    "best_identity": 0.1935483870967742,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p0",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p0",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p0",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.9919354838709677
+   }
+  },
+  {
+   "case_id": "mutant3_p0",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.9758064516129032
+   }
+  },
+  {
+   "case_id": "mutant10_p0",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.9193548387096774
+   }
+  },
+  {
+   "case_id": "mutant30_p0",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.7580645161290323
+   }
+  },
+  {
+   "case_id": "trunc75_p0",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 31,
+    "best_identity": 0.75
+   }
+  },
+  {
+   "case_id": "trunc50_p0",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 62,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p0",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 93,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "shuffled_p1",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p1",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p1",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p1",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.991869918699187
+   }
+  },
+  {
+   "case_id": "mutant3_p1",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.975609756097561
+   }
+  },
+  {
+   "case_id": "mutant10_p1",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.9186991869918699
+   }
+  },
+  {
+   "case_id": "mutant30_p1",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.7560975609756098
+   }
+  },
+  {
+   "case_id": "trunc75_p1",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 31,
+    "best_identity": 0.7692307692307693
+   }
+  },
+  {
+   "case_id": "trunc50_p1",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 62,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p1",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 93,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "shuffled_p2",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p2",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "best 0.204 vs parent 1.000",
+   "measurements": {
+    "best_identity": 0.2037037037037037,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p2",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p2",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.9907407407407407
+   }
+  },
+  {
+   "case_id": "mutant3_p2",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.9722222222222222
+   }
+  },
+  {
+   "case_id": "mutant10_p2",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.9074074074074074
+   }
+  },
+  {
+   "case_id": "mutant30_p2",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.7222222222222222
+   }
+  },
+  {
+   "case_id": "trunc75_p2",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 27,
+    "best_identity": 0.7596153846153846
+   }
+  },
+  {
+   "case_id": "trunc50_p2",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 54,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p2",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 81,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "shuffled_p3",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p3",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p3",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p3",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.9906542056074766
+   }
+  },
+  {
+   "case_id": "mutant3_p3",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.9719626168224299
+   }
+  },
+  {
+   "case_id": "mutant10_p3",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.9065420560747663
+   }
+  },
+  {
+   "case_id": "mutant30_p3",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.719626168224299
+   }
+  },
+  {
+   "case_id": "trunc75_p3",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 27,
+    "best_identity": 0.7476635514018691
+   }
+  },
+  {
+   "case_id": "trunc50_p3",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 54,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p3",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 81,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "shuffled_p4",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "best 0.312 vs parent 1.000",
+   "measurements": {
+    "best_identity": 0.312,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p4",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p4",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p4",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.992
+   }
+  },
+  {
+   "case_id": "mutant3_p4",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.976
+   }
+  },
+  {
+   "case_id": "mutant10_p4",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.92
+   }
+  },
+  {
+   "case_id": "mutant30_p4",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.76
+   }
+  },
+  {
+   "case_id": "trunc75_p4",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 32,
+    "best_identity": 0.744
+   }
+  },
+  {
+   "case_id": "trunc50_p4",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 63,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p4",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 94,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "shuffled_p5",
+   "family": "shuffled",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "reversed_p5",
+   "family": "reversed",
+   "expectation": "worse_than_parent",
+   "passed": true,
+   "detail": "no match reported (parent reached 1.000)",
+   "measurements": {
+    "best_identity": null,
+    "parent_best": 1.0
+   }
+  },
+  {
+   "case_id": "duplicated_p5",
+   "family": "duplicated",
+   "expectation": "normalized_to_domain",
+   "passed": true,
+   "detail": "normalization reported; doubled 1.0 vs parent 1.0",
+   "measurements": {
+    "best_identity": 1.0,
+    "parent_best": 1.0,
+    "normalization_note": true
+   }
+  },
+  {
+   "case_id": "mutant1_p5",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 1,
+    "best_identity": 0.991304347826087
+   }
+  },
+  {
+   "case_id": "mutant3_p5",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 3,
+    "best_identity": 0.9739130434782609
+   }
+  },
+  {
+   "case_id": "mutant10_p5",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 10,
+    "best_identity": 0.9130434782608695
+   }
+  },
+  {
+   "case_id": "mutant30_p5",
+   "family": "point_mutant",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 30,
+    "best_identity": 0.7391304347826086
+   }
+  },
+  {
+   "case_id": "trunc75_p5",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 29,
+    "best_identity": 0.7478260869565218
+   }
+  },
+  {
+   "case_id": "trunc50_p5",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 58,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "trunc25_p5",
+   "family": "truncation",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "recorded for ladder check",
+   "measurements": {
+    "distance": 87,
+    "best_identity": null
+   }
+  },
+  {
+   "case_id": "chimera_p0_p1",
+   "family": "chimera",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "best global_identity 0.774 < 0.9",
+   "measurements": {
+    "best_identity": 0.7741935483870968
+   }
+  },
+  {
+   "case_id": "chimera_p2_p3",
+   "family": "chimera",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "best global_identity 0.861 < 0.9",
+   "measurements": {
+    "best_identity": 0.8611111111111112
+   }
+  },
+  {
+   "case_id": "chimera_p4_p5",
+   "family": "chimera",
+   "expectation": "no_confident_match",
+   "passed": true,
+   "detail": "best global_identity 0.833 < 0.9",
+   "measurements": {
+    "best_identity": 0.8333333333333334
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VH_VH::00955a7d59136929d81c68597ad19c45fe77cad891fcace8d117e9db0e78b0dc",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.992 -> d3:0.976 -> d10:0.919 -> d30:0.758",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.9919354838709677
+     ],
+     [
+      3,
+      0.9758064516129032
+     ],
+     [
+      10,
+      0.9193548387096774
+     ],
+     [
+      30,
+      0.7580645161290323
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VH_VH::0099dc8bb34032c4fedc7e4f41b599309f792c1eebf90c91679ad17348152c71",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.992 -> d3:0.976 -> d10:0.919 -> d30:0.756",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.991869918699187
+     ],
+     [
+      3,
+      0.975609756097561
+     ],
+     [
+      10,
+      0.9186991869918699
+     ],
+     [
+      30,
+      0.7560975609756098
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VHH_VHH::02ae765e6f7249b9d7f4f4c3c4b358171ad74da35c6375d6f95c78caa664f378",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.992 -> d3:0.976 -> d10:0.920 -> d30:0.760",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.992
+     ],
+     [
+      3,
+      0.976
+     ],
+     [
+      10,
+      0.92
+     ],
+     [
+      30,
+      0.76
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VHH_VHH::0e1a078ee828ac810bd6b4913d1846a271b197036619f5a7e096fdf47c5fac3d",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.991 -> d3:0.974 -> d10:0.913 -> d30:0.739",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.991304347826087
+     ],
+     [
+      3,
+      0.9739130434782609
+     ],
+     [
+      10,
+      0.9130434782608695
+     ],
+     [
+      30,
+      0.7391304347826086
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VL-kappa_VL-kappa::000a804f42a67329bd8aae876a7819f846e62962b5f115e10cb1ed61f8d65dad",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.991 -> d3:0.972 -> d10:0.907 -> d30:0.722",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.9907407407407407
+     ],
+     [
+      3,
+      0.9722222222222222
+     ],
+     [
+      10,
+      0.9074074074074074
+     ],
+     [
+      30,
+      0.7222222222222222
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_point_mutant_VL-kappa_VL-kappa::0058c0019865e6271a452ec8309fc6649a8b98c207624722de3f4bcbcc898773",
+   "family": "point_mutant_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "monotone: d1:0.991 -> d3:0.972 -> d10:0.907 -> d30:0.720",
+   "measurements": {
+    "ladder": [
+     [
+      1,
+      0.9906542056074766
+     ],
+     [
+      3,
+      0.9719626168224299
+     ],
+     [
+      10,
+      0.9065420560747663
+     ],
+     [
+      30,
+      0.719626168224299
+     ]
+    ]
+   }
+  },
+  {
+   "case_id": "ladder_truncation_VH_VH::00955a7d59136929d81c68597ad19c45fe77cad891fcace8d117e9db0e78b0dc",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  },
+  {
+   "case_id": "ladder_truncation_VH_VH::0099dc8bb34032c4fedc7e4f41b599309f792c1eebf90c91679ad17348152c71",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  },
+  {
+   "case_id": "ladder_truncation_VHH_VHH::02ae765e6f7249b9d7f4f4c3c4b358171ad74da35c6375d6f95c78caa664f378",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  },
+  {
+   "case_id": "ladder_truncation_VHH_VHH::0e1a078ee828ac810bd6b4913d1846a271b197036619f5a7e096fdf47c5fac3d",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  },
+  {
+   "case_id": "ladder_truncation_VL-kappa_VL-kappa::000a804f42a67329bd8aae876a7819f846e62962b5f115e10cb1ed61f8d65dad",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  },
+  {
+   "case_id": "ladder_truncation_VL-kappa_VL-kappa::0058c0019865e6271a452ec8309fc6649a8b98c207624722de3f4bcbcc898773",
+   "family": "truncation_ladder",
+   "expectation": "monotone_in_distance",
+   "passed": true,
+   "detail": "only 1 scored point(s); nothing to compare",
+   "measurements": {}
+  }
+ ],
+ "crash_detail": [],
+ "prohibited_claim_detail": []
+}

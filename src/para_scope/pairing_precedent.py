@@ -51,6 +51,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from para_scope.corpus import Corpus
+from para_scope.features import STANDARD_AMINO_ACIDS
 from para_scope.indexes.approximate import (
     ALIGNMENT_SCORING_VERSION,
     MIN_QUERY_COVERAGE,
@@ -562,6 +563,22 @@ def compute_pairing_precedent(
         result.limitations.append(f"Heavy chain: {heavy_note}")
     if light_note is not None:
         result.limitations.append(f"Light chain: {light_note}")
+
+    # Reject non-sequence input before searching, so a result cannot read
+    # NOT_FOUND -- a claim about the corpus -- for something that was never a
+    # valid query. Found by the adversarial audit.
+    for label, sequence in (("heavy", heavy_sequence), ("light", light_sequence)):
+        if not sequence:
+            continue
+        unknown = sorted(set(sequence) - set(STANDARD_AMINO_ACIDS))
+        if unknown:
+            result.status = EvidenceStatus.UNSUPPORTED_COMPONENT
+            result.reason = (
+                f"{label} sequence contains characters outside the 20 standard "
+                f"amino acids: {unknown}. No search is run; the input is not "
+                f"modified to make it searchable."
+            )
+            return result
 
     if heavy_component_type not in HEAVY_TYPES or light_component_type not in LIGHT_TYPES:
         result.status = EvidenceStatus.UNSUPPORTED_COMPONENT
