@@ -4,10 +4,10 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-10-04, against commit on `main`, 316 tests passing.
+Last verified: 2026-10-04, against commit on `main`, 350 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
-artifact, not a time box. Gates 0–8 are complete.
+artifact, not a time box. Gates 0–9 are complete (Layer 2; Layers 3–4 remain).
 
 ---
 
@@ -26,8 +26,8 @@ artifact, not a time box. Gates 0–8 are complete.
 | 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
 | 8 | Pairing precedent | ✅ | `reports/GATE8_PAIRING_PRECEDENT.md` |
 | 9.0 | Germline reference data (milestone 1) | ✅ | `reports/GATE9_GERMLINE.md` |
-| 9.1 | Variable/constant component split (milestone 2) | ✅ | `reports/GATE9_COMPONENT_SPLIT.md` |
-| **9** | **Empirical reference distributions** | **ready — blocks calibrated terms in Gates 7 and 8** | SPEC §19 Layers 2–4 |
+| 9.1 | Variable/constant component split | ✅ | `reports/GATE9_COMPONENT_SPLIT.md` |
+| **9** | **Empirical reference distributions (Layer 2)** | ✅ | `reports/GATE9_CALIBRATION.md` |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
@@ -262,6 +262,13 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
 - **Gate 7 and Gate 8 numbers predate the split.** Their code is unaffected, but
   every measured value in their reports was computed on identities inflated ~5.6
   points by constant regions, and has not been re-measured.
+- **`MINIMUM_SAMPLE_SIZE = 30` is a judgement**, not a power calculation.
+- **Germline distributions rest on a 700-per-class sample, similarity on 120.**
+  Fixed-seed and recorded, but wider samples would tighten the tails, which is
+  where percentiles are least stable and most quoted.
+- **Window coverage yields only 10 reportable strata**, because most CDR and
+  framework classes fall below `MINIMUM_WINDOWS_FOR_FRACTION = 20`. The two
+  thresholds interact and should be revisited together.
 - **Recall was measured only at `top_k=10`.** Reporting more matches per component
   requires re-measuring; it will be worse.
 - **Coverage floor and shortlist threshold interact** (stage-1 recall 0.975 vs
@@ -534,6 +541,38 @@ Gate 7 emits everything except its calibrated term. Gate 8 will be in the same
 position, and Gate 11's index consumes both. Calibration is now the single blocker
 on two finished dimensions rather than a later refinement — and it still needs the
 germline baseline discussed above.
+
+## Gate 9 — what calibration unblocked, and what it did not ✅
+
+Full detail in `reports/GATE9_CALIBRATION.md`. 599 distributions in
+`data/cache/calibration_v1.json`, `calibration_version` 1.0.0, built offline and
+loaded read-only.
+
+**Unblocked:** Gate 7's `calibrated_component_similarity`, verified end-to-end.
+
+**Deliberately still blocked** — the distinction matters because each has a
+different owner:
+
+- `format_relevance` (Gates 7, 8) — Gate 10.5. Needs a declared-format input the
+  submission schema does not collect. 0.10 of SPEC §26's weight.
+- `vh_vl_germline_pair_precedent` (Gate 8) — germline assignment now exists, so the
+  original blocker is resolved. What remains is a VH-gene × VL-gene co-occurrence
+  table over the 12,032 observed pairs, which needs ~9,000 components
+  germline-assigned offline. Reporting from the candidate's own two gene calls
+  would describe co-occurrence in one candidate, not precedent in a database.
+- `combined_cdr_pattern_similarity` (Gate 8) — SPEC §21 wants a length-matched
+  **empirical null** (what two unrelated CDRs of this length share by chance).
+  This gate built distributions of *observed* values, a different object. The
+  length-banding is the foundation; the null population has not been built.
+
+**Layers 3 and 4 are not done.** SPEC §19 also defines an evidence support grade
+(A/B/C/D) and sufficiency/uncertainty reporting. Grade thresholds "must be
+benchmarked and versioned" per the spec and have not been. Layer 4's counts are
+mostly already emitted by Gates 7 and 8 but are not assembled. Both belong to
+Gate 10.
+
+**21.4% of strata (128 of 599) are below `MINIMUM_SAMPLE_SIZE = 30`** and are
+unreportable by design.
 
 ## Minor leftovers
 

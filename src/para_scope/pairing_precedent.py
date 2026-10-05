@@ -99,10 +99,17 @@ PAIRING_DISCLAIMER = (
 
 BLOCKED_DIMENSIONS = {
     "vh_vl_germline_pair_precedent": (
-        "no germline assignment exists anywhere in the codebase -- "
-        "EvidenceClass.GERMLINE is declared and nothing populates it, and ANARCII "
-        "provides numbering only, no V/D/J calls. Needs the germline reference set "
-        "that Gate 9 also depends on"
+        "germline V-gene assignment now exists (para_scope.germline, OGRDB human "
+        "reference) and returns a gene call for every variable domain tested, so "
+        "the original blocker -- that nothing populated EvidenceClass.GERMLINE -- "
+        "is resolved. What remains is the reference table this dimension actually "
+        "needs: which VH germline gene is observed paired with which VL germline "
+        "gene, and how often, across the 12,032 observed pairs. Building it means "
+        "germline-assigning every unique paired variable domain, which is a "
+        "separate offline job (one alignment per reference allele per component). "
+        "Until that table exists this dimension reports nothing rather than "
+        "guessing from the per-chain gene calls, which would describe gene "
+        "co-occurrence in a candidate rather than precedent in a database"
     ),
     "combined_cdr_pattern_similarity": (
         "CDRs are short components and require a length-matched empirical null "

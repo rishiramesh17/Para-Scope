@@ -74,6 +74,7 @@ from para_scope.models import (
     EvidenceStatus,
     compare_eligibility,
 )
+from para_scope.calibration import CalibratedPercentile, CalibrationSet
 from para_scope.numbering import (
     compute_sequence_checksum,
     normalize_query_to_variable_domain,
@@ -129,6 +130,13 @@ class TherapeuticMatch:
     alignment_length: int
     insertions: int = 0
     deletions: int = 0
+
+    # SPEC S19 Layer 2: where this match's global_identity sits in the reference
+    # distribution for its component class. None when no calibration was supplied;
+    # a CalibratedPercentile carrying INSUFFICIENT_EVIDENCE when one was supplied
+    # but holds no distribution for this stratum. Those are different facts and are
+    # not collapsed.
+    calibrated_similarity: Optional[CalibratedPercentile] = None
 
     # Curated therapeutic record (SPEC S26 display fields).
     alternative_names: list[str] = field(default_factory=list)
@@ -414,6 +422,11 @@ def _computable_terms(matches: list[TherapeuticMatch]) -> dict[str, Optional[flo
     }
 
 
+# Measurement id of the reference distribution that calibrates a match's
+# similarity. Named here so the producer (scripts/build_calibration.py) and the
+# consumer cannot drift apart silently -- a typo would look like missing data.
+SIMILARITY_MEASUREMENT = "similarity.best_global_identity_vs_therapeutics"
+
 BLOCKED_TERMS = {
     "calibrated_component_similarity": (
         "requires the empirical reference distributions built in Gate 9 (SPEC S19 "
@@ -445,9 +458,17 @@ def compute_therapeutic_precedent(
     shortlist_limit: Optional[int] = None,
     min_query_coverage: float = MIN_QUERY_COVERAGE,
     min_subject_coverage: float = MIN_SUBJECT_COVERAGE,
+    calibration: Optional[CalibrationSet] = None,
 ) -> TherapeuticPrecedentResult:
     """
     Gather therapeutic-precedent evidence for one component (SPEC S26).
+
+    `calibration`, when supplied, adds SPEC S19 Layer 2 percentiles to each match
+    and clears the `calibrated_component_similarity` blocked term. It is optional
+    rather than required because a raw measurement is still valid evidence without
+    one -- what is not valid is presenting an uncalibrated number as if it were
+    calibrated, which is why the blocked term stays listed until a distribution
+    actually supplies the percentile.
 
     Never raises on an unscoreable input: an evidence dimension must be able to
     fill its slot in a profile with an explicit status rather than abort the
@@ -524,6 +545,38 @@ def compute_therapeutic_precedent(
     # between two runs over the same snapshot.
     matches.sort(key=lambda m: m.therapeutic_name)
     matches.sort(key=lambda m: m.rank_key, reverse=True)
+
+    # SPEC S19 Layer 2. Attached per match rather than once per result because
+    # each match may be a different component class (a related-class hit is
+    # percentiled against its own population, never the query's).
+    if calibration is not None:
+        for match in matches:
+            match.calibrated_similarity = calibration.percentile(
+                SIMILARITY_MEASUREMENT,
+                match.matched_component_type.value,
+                match.global_identity,
+                # Length of the *matched* component, since that is the population
+                # it is being placed in. Length-stratified classes (the CDRs)
+                # require it; for the rest it is ignored.
+                length=(
+                    len(matched.sequence)
+                    if (matched := corpus.get(match.matched_record_id)) is not None
+                    else None
+                ),
+            )
+        # The term is only unblocked where a percentile actually came back. A
+        # supplied calibration that holds no distribution for this stratum leaves
+        # the term blocked, with the percentile's own reason explaining why.
+        if any(
+            m.calibrated_similarity is not None
+            and m.calibrated_similarity.status is EvidenceStatus.AVAILABLE
+            for m in matches
+        ):
+            result.blocked_terms = {
+                k: v for k, v in result.blocked_terms.items()
+                if k != "calibrated_component_similarity"
+            }
+
     result.matches = matches
     result.raw_match_count = len(matches)
     result.therapeutics_matched = len({m.therapeutic_name for m in matches})
