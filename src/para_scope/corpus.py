@@ -23,6 +23,7 @@ from para_scope.numbering import (
     compute_sequence_checksum,
     extract_region_sequence,
     number_sequences,
+    split_chain_at_variable_domain,
 )
 from para_scope.parsers.sabdab2 import (
     PARSER_VERSION as SABDAB2_PARSER_VERSION,
@@ -59,7 +60,22 @@ from para_scope.parsers.thera_sabdab import (
 #            Also changes PairRecord.structure_available from bool to Optional[bool]
 #            and fixes its Thera-SAbDab value, so pair metadata from an older
 #            snapshot is not comparable either.
-CORPUS_SCHEMA_VERSION = "5.0.0"
+#   6.0.0 -- source chains split at the numbered variable domain. VH/VL/VHH
+#            components now hold the V-domain only (not the whole Fab chain), and
+#            the constant remainder is indexed as CONSTANT_HEAVY/CONSTANT_LIGHT.
+#            All variable-domain checksums change, so component identity,
+#            deduplication, and pair keys are not comparable with earlier snapshots.
+CORPUS_SCHEMA_VERSION = "6.0.0"
+
+# Shortest C-terminal remainder stored as a constant-region component.
+#
+# PROVISIONAL, not calibrated -- same standing as the 0.70 coverage floor and
+# MINIMUM_WINDOWS_FOR_FRACTION. A constant domain is ~95-110 residues; this
+# admits partial domains from truncated constructs while rejecting short
+# cloning-artifact tails that are not a domain at all. Remainders below it are
+# counted in IngestStats.constant_regions_too_short rather than discarded
+# silently. Gate 9 should calibrate it.
+MIN_CONSTANT_REGION_LENGTH = 30
 
 REGION_TO_COMPONENT_TYPE: dict[tuple[str, str], ComponentType] = {
     ('H', 'FR1'): ComponentType.FR_H1,
@@ -190,6 +206,18 @@ class IngestStats:
     # Aliases claimed by more than one therapeutic. Such an alias is registered to
     # neither, since resolving it either way would merge two distinct entities.
     therapeutic_alias_collisions: int = 0
+    # Constant-region sequence recovered by splitting each source chain at its
+    # numbered variable domain. Counted separately from components so the split
+    # is visible in ingest output rather than inferable only from type counts.
+    constant_regions_indexed: int = 0
+    # C-terminal remainders shorter than MIN_CONSTANT_REGION_LENGTH. Not indexed,
+    # not discarded silently -- a count here means residues exist that no
+    # component claims.
+    constant_regions_too_short: int = 0
+    # Chains carrying residues N-terminal to the variable domain (tag, signal
+    # peptide, fusion partner, or another domain). Not indexed: there is no
+    # component type they can honestly claim.
+    chains_with_n_terminal_flank: int = 0
     warnings: list[str] = field(default_factory=list)
 
 
@@ -239,6 +267,61 @@ def split_alternative_names(raw: Optional[str]) -> list[str]:
 
 def _resolve_light_component_type(chain_type: str) -> ComponentType:
     return ComponentType.VL_KAPPA if chain_type == 'K' else ComponentType.VL_LAMBDA
+
+
+def _checksum_of_record_id(record_id: str) -> str:
+    """The checksum half of a `<type>::<checksum>` record id.
+
+    The pair index is keyed on component checksums, and a component's checksum is
+    now the variable domain's rather than the whole source chain's. Deriving the
+    key from the record id guarantees the two cannot drift: registering a pair
+    under a chain checksum while lookups use a domain checksum would silently
+    return zero observed pairs for every query.
+    """
+    return record_id.rpartition("::")[2]
+
+
+def _domain_numbered(parent: NumberedComponent, domain_seq: str) -> NumberedComponent:
+    """The parent's numbering, re-pointed at the variable domain alone.
+
+    `imgt_numbering` is kept verbatim -- it already describes exactly these
+    residues. Only `original_sequence` and the checksum change, because the
+    component's identity is now the domain rather than the whole source chain.
+    """
+    return NumberedComponent(
+        original_sequence=domain_seq,
+        sequence_checksum=compute_sequence_checksum(domain_seq),
+        imgt_numbering=parent.imgt_numbering,
+        chain_type=parent.chain_type,
+        scheme=parent.scheme,
+        numbering_score=parent.numbering_score,
+        numbering_error=None,
+        tool_name=parent.tool_name,
+        tool_version=parent.tool_version,
+    )
+
+
+def _unnumbered(parent: NumberedComponent, sequence: str) -> NumberedComponent:
+    """A component carrying no numbering, for constant-region sequence.
+
+    IMGT V-domain numbering does not apply to a constant region, so
+    `imgt_numbering` is empty and `scheme` says `unnumbered` rather than
+    inheriting `imgt` -- claiming an IMGT scheme for residues that were never
+    IMGT-numbered would misrepresent the coordinate system, which the project
+    forbids combining or inventing. `chain_type` is retained because heavy
+    versus light is known and is what keeps the comparison like-with-like.
+    """
+    return NumberedComponent(
+        original_sequence=sequence,
+        sequence_checksum=compute_sequence_checksum(sequence),
+        imgt_numbering=[],
+        chain_type=parent.chain_type,
+        scheme="unnumbered",
+        numbering_score=parent.numbering_score,
+        numbering_error=None,
+        tool_name=parent.tool_name,
+        tool_version=parent.tool_version,
+    )
 
 
 def _sub_numbered(parent: NumberedComponent, region_name: str, region_seq: str) -> NumberedComponent:
@@ -403,6 +486,7 @@ class Corpus:
         source_database: str,
         source_accession: str,
         therapeutic_name: Optional[str] = None,
+        stats: Optional["IngestStats"] = None,
     ) -> str:
         """Index one already-numbered chain's variable domain plus all IMGT sub-regions.
 
@@ -412,11 +496,68 @@ class Corpus:
         therapeutics contain this CDR" from an alignment hit alone.
         """
         component_type = resolve_component_type(numbered.chain_type)
+
+        # Store the numbered V-domain, never the whole source chain. The chain as
+        # provided often carries more than the variable domain -- a Fab heavy
+        # chain carries CH1, and some entries carry tags or fusion partners --
+        # and storing all of it as a VH/VL component made 68% of `VH` components
+        # Fab chains (median 222 residues against a 121-residue median domain).
+        # See numbering.split_chain_at_variable_domain for the measured effect.
+        prefix, domain_seq, suffix = split_chain_at_variable_domain(numbered)
+        if not domain_seq:
+            # Nothing was numbered; there is no variable domain to index. Fall
+            # back to previous behaviour rather than dropping the chain, and
+            # record it, because this should not happen for a numbered chain.
+            domain_seq = numbered.original_sequence
+            prefix, suffix = "", ""
+            if stats is not None:
+                stats.warnings.append(
+                    f"{source_accession}: numbered chain yielded no variable-domain "
+                    f"residues; stored the source chain unsplit"
+                )
+
+        domain_numbered = _domain_numbered(numbered, domain_seq)
         domain_record_id = self._add_component(
-            component_type, numbered.original_sequence, numbered, source_database, source_accession
+            component_type, domain_seq, domain_numbered, source_database, source_accession
         )
         if therapeutic_name is not None:
             self._component_to_therapeutics.setdefault(domain_record_id, set()).add(therapeutic_name)
+
+        # The C-terminal remainder is constant-region sequence for a Fab chain.
+        # It is indexed as its own component so those residues remain available
+        # as evidence -- the roadmap previously recorded constant-region sequence
+        # as absent from both sources, which was wrong: it was inside the
+        # variable-domain components all along.
+        if len(suffix) >= MIN_CONSTANT_REGION_LENGTH:
+            constant_type = (
+                ComponentType.CONSTANT_HEAVY
+                if numbered.chain_type in HEAVY_CHAIN_TYPES
+                else ComponentType.CONSTANT_LIGHT
+            )
+            constant_record_id = self._add_component(
+                constant_type,
+                suffix,
+                _unnumbered(numbered, suffix),
+                source_database,
+                source_accession,
+            )
+            if therapeutic_name is not None:
+                self._component_to_therapeutics.setdefault(constant_record_id, set()).add(
+                    therapeutic_name
+                )
+            if stats is not None:
+                stats.constant_regions_indexed += 1
+        elif suffix and stats is not None:
+            stats.constant_regions_too_short += 1
+
+        # An N-terminal segment is of unknown identity -- a tag, a signal
+        # peptide, a fusion partner, or another domain. It is deliberately not
+        # typed as a constant region and not indexed, because there is no
+        # component type it can honestly claim. Counted so the quantity is
+        # visible; the residues stay recoverable from the source via
+        # source_pointers.
+        if prefix and stats is not None:
+            stats.chains_with_n_terminal_flank += 1
 
         chain_label = 'H' if numbered.chain_type == 'H' else 'L'
         for region_name in IMGT_REGION_BOUNDARIES:
@@ -484,21 +625,29 @@ class Corpus:
             pdb_ids = self._sabdab_id_to_pdb_ids.setdefault(row.sabdab_id, set())
             pdb_ids.add(row.pdb_id)
 
+            heavy_record_id = None
             heavy_numbered = self._resolve_chain(row.heavy_sequence, numbering_cache, HEAVY_CHAIN_TYPES, row, stats)
             if heavy_numbered is not None:
                 stats.heavy_chains_parsed += 1
                 heavy_component_type = ComponentType.VHH if row.antibody_type == "SD-H" else ComponentType.VH
-                self._add_chain(heavy_numbered, lambda _ct: heavy_component_type, "SAbDab2", row.instance_id)
+                heavy_record_id = self._add_chain(
+                    heavy_numbered, lambda _ct: heavy_component_type, "SAbDab2", row.instance_id,
+                    stats=stats,
+                )
 
+            light_record_id = None
             light_numbered = self._resolve_chain(row.light_sequence, numbering_cache, LIGHT_CHAIN_TYPES, row, stats)
             if light_numbered is not None:
                 stats.light_chains_parsed += 1
-                self._add_chain(light_numbered, _resolve_light_component_type, "SAbDab2", row.instance_id)
+                light_record_id = self._add_chain(
+                    light_numbered, _resolve_light_component_type, "SAbDab2", row.instance_id,
+                    stats=stats,
+                )
 
-            if heavy_numbered is not None and light_numbered is not None:
+            if heavy_record_id is not None and light_record_id is not None:
                 self.pairs.add(
-                    heavy_numbered.sequence_checksum,
-                    light_numbered.sequence_checksum,
+                    _checksum_of_record_id(heavy_record_id),
+                    _checksum_of_record_id(light_record_id),
                     PairRecord(
                         source_database="SAbDab2",
                         source_accession=row.instance_id,
@@ -616,6 +765,7 @@ class Corpus:
                     arm_record.heavy_record_id = self._add_chain(
                         heavy_numbered, lambda _ct: heavy_component_type, "Thera-SAbDab", accession,
                         therapeutic_name=row.therapeutic_name,
+                        stats=stats,
                     )
 
                 light_numbered = None
@@ -628,12 +778,13 @@ class Corpus:
                         arm_record.light_record_id = self._add_chain(
                             light_numbered, _resolve_light_component_type, "Thera-SAbDab", accession,
                             therapeutic_name=row.therapeutic_name,
+                            stats=stats,
                         )
 
-                if heavy_numbered is not None and light_numbered is not None:
+                if arm_record.heavy_record_id is not None and arm_record.light_record_id is not None:
                     self.pairs.add(
-                        heavy_numbered.sequence_checksum,
-                        light_numbered.sequence_checksum,
+                        _checksum_of_record_id(arm_record.heavy_record_id),
+                        _checksum_of_record_id(arm_record.light_record_id),
                         PairRecord(
                             source_database="Thera-SAbDab",
                             source_accession=accession,

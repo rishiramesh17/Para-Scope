@@ -14,7 +14,11 @@ from para_scope.corpus import Corpus, REGION_TO_COMPONENT_TYPE
 from para_scope.indexes import ApproximateIndex, ExactIndex, PairIndex, PairRecord, PositionalIndex
 from para_scope.indexes.approximate import ALIGNMENT_SCORING_VERSION
 from para_scope.models import ComponentType
-from para_scope.numbering import number_sequence
+from para_scope.numbering import (
+    compute_sequence_checksum,
+    number_sequence,
+    split_chain_at_variable_domain,
+)
 from para_scope.parsers.sabdab2 import REQUIRED_COLUMNS, parse_ab_split_csv
 
 # Public trastuzumab heavy/light (kappa) variable domains -- same fixtures as test_numbering.py
@@ -321,9 +325,14 @@ class TestCorpusIngestion:
         stats = corpus.ingest_sabdab2(csv_path)
         assert stats.heavy_chains_parsed == 1
 
+        # Keyed on the numbered V-domain, not the submitted chain: this fixture
+        # carries a leading "GS" cloning-tag remnant that ANARCII does not
+        # number, so the stored component is the 121-residue domain.
         nano_numbered = number_sequence(NANOBODY_VHH)
-        vhh_record_id = f"{ComponentType.VHH.value}::{nano_numbered.sequence_checksum}"
-        vh_record_id = f"{ComponentType.VH.value}::{nano_numbered.sequence_checksum}"
+        _pre, nano_domain, _suf = split_chain_at_variable_domain(nano_numbered)
+        domain_checksum = compute_sequence_checksum(nano_domain)
+        vhh_record_id = f"{ComponentType.VHH.value}::{domain_checksum}"
+        vh_record_id = f"{ComponentType.VH.value}::{domain_checksum}"
         assert corpus.get(vhh_record_id) is not None
         assert corpus.get(vh_record_id) is None
 

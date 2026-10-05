@@ -74,7 +74,10 @@ from para_scope.models import (
     EvidenceStatus,
     compare_eligibility,
 )
-from para_scope.numbering import compute_sequence_checksum
+from para_scope.numbering import (
+    compute_sequence_checksum,
+    normalize_query_to_variable_domain,
+)
 
 # Bump on any change that alters an emitted measurement or the set of matches
 # returned. Stored on every result so a stored profile is never reinterpreted
@@ -452,7 +455,10 @@ def compute_therapeutic_precedent(
     (NOT_FOUND) from "this could not be evaluated" (UNSUPPORTED_COMPONENT) from
     "the corpus holds no therapeutic records at all" (DATABASE_UNAVAILABLE).
     """
-    query = query.strip()
+    original_query = query
+    query, normalization_note = normalize_query_to_variable_domain(
+        component_type.value, query
+    )
     result = TherapeuticPrecedentResult(
         status=EvidenceStatus.NOT_FOUND,
         component_type=component_type,
@@ -460,6 +466,9 @@ def compute_therapeutic_precedent(
         blocked_terms=dict(BLOCKED_TERMS),
         score_reason=SCORE_WITHHELD_REASON,
     )
+
+    if normalization_note is not None:
+        result.limitations.append(normalization_note)
 
     if not query:
         result.status = EvidenceStatus.UNSUPPORTED_COMPONENT

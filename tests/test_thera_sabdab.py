@@ -14,7 +14,11 @@ import pytest
 
 from para_scope.corpus import Corpus, IngestStats
 from para_scope.models import ComponentType
-from para_scope.numbering import number_sequence
+from para_scope.numbering import (
+    compute_sequence_checksum,
+    number_sequence,
+    split_chain_at_variable_domain,
+)
 from para_scope.parsers.thera_sabdab import (
     REQUIRED_COLUMNS,
     is_single_domain_format,
@@ -229,8 +233,12 @@ class TestCorpusThereSAbDabIngestion:
         assert stats.light_chains_parsed == 0
 
         nano_numbered = number_sequence(NANOBODY_VHH)
-        vhh_record_id = f"{ComponentType.VHH.value}::{nano_numbered.sequence_checksum}"
-        vh_record_id = f"{ComponentType.VH.value}::{nano_numbered.sequence_checksum}"
+        # Keyed on the numbered V-domain: this fixture carries a leading "GS"
+        # cloning-tag remnant that ANARCII does not number.
+        _pre, nano_domain, _suf = split_chain_at_variable_domain(nano_numbered)
+        domain_checksum = compute_sequence_checksum(nano_domain)
+        vhh_record_id = f"{ComponentType.VHH.value}::{domain_checksum}"
+        vh_record_id = f"{ComponentType.VH.value}::{domain_checksum}"
         assert corpus.get(vhh_record_id) is not None
         assert corpus.get(vh_record_id) is None
 

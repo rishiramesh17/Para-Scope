@@ -38,6 +38,22 @@ class ComponentType(str, Enum):
     FR_L3 = "FR-L3"
     FR_L4 = "FR-L4"
 
+    # Constant regions (SPEC S6.5), as actually recoverable from the sources.
+    #
+    # SPEC S6.5 names CH1 / Hinge / CH2 / CH3 / CL-kappa / CL-lambda separately.
+    # These two types are deliberately coarser: what the corpus yields is the
+    # residues C-terminal to a numbered V-domain, and deciding which constant
+    # domains that span contains needs a constant-region reference set that is
+    # not bundled. Calling a ~100-residue remainder "CH1" because its length is
+    # about right would be a claim, not a measurement -- so it is stored
+    # undecomposed and named that way. Decomposition is future work; these types
+    # are what honest ingestion can produce today.
+    #
+    # They are NOT full chains: a Fab heavy chain is V + CH1 and carries no
+    # CH2/CH3, so FULL_HEAVY would overstate it.
+    CONSTANT_HEAVY = "Constant region (heavy, undecomposed)"
+    CONSTANT_LIGHT = "Constant region (light, undecomposed)"
+
     # Full chains
     FULL_HEAVY = "Full heavy chain"
     FULL_LIGHT = "Full light chain"
@@ -116,6 +132,13 @@ def compare_eligibility(input_type: ComponentType, matched_type: ComponentType) 
        (input_type in light_cdr and matched_type in heavy_cdr) or \
        (input_type in heavy_fr and matched_type in light_fr) or \
        (input_type in light_fr and matched_type in heavy_fr):
+        return ComponentRelationship.EXCLUDED
+
+    # Heavy vs light constant region: excluded, same rule as heavy vs light
+    # variable domains. A CH1 and a CL are different components, and their
+    # mutual similarity would be a comparison across chain classes.
+    if (input_type == ComponentType.CONSTANT_HEAVY and matched_type == ComponentType.CONSTANT_LIGHT) or \
+       (input_type == ComponentType.CONSTANT_LIGHT and matched_type == ComponentType.CONSTANT_HEAVY):
         return ComponentRelationship.EXCLUDED
 
     # VH/VL comparisons: excluded

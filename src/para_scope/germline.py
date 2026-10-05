@@ -68,6 +68,7 @@ from para_scope.indexes.approximate import (
     ApproximateIndex,
 )
 from para_scope.models import ComponentType, EvidenceClass, EvidenceStatus
+from para_scope.numbering import normalize_query_to_variable_domain
 
 # Bump on any change that alters a computed assignment, including a change of
 # reference set or translation rule. Stored on every result so a stored
@@ -265,7 +266,13 @@ def compute_germline_assignment(
     def result(status: EvidenceStatus, **kwargs) -> GermlineAssignmentResult:
         return GermlineAssignmentResult(status=status, **kwargs)
 
-    cleaned = sequence.strip().upper()
+    # Germline V genes are ~98 residues. A query submitted as a whole chain could
+    # never clear the coverage floor against one -- measured at ~70% NOT_FOUND
+    # before this normalization, which looked like missing germline evidence but
+    # was a length mismatch (docs/ROADMAP.md, "Germline reference data").
+    cleaned, normalization_note = normalize_query_to_variable_domain(
+        component_type.value, sequence
+    )
 
     if not cleaned:
         return result(
@@ -356,9 +363,12 @@ def compute_germline_assignment(
             )
         )
 
-    return GermlineAssignmentResult(
+    assignment = GermlineAssignmentResult(
         status=EvidenceStatus.AVAILABLE,
         matches=matches,
         nearest_germline_identity=matches[0].global_identity,
         nearest_gene_call=matches[0].gene_call,
     )
+    if normalization_note is not None:
+        assignment.limitations.append(normalization_note)
+    return assignment

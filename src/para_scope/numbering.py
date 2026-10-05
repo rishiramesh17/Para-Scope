@@ -205,6 +205,128 @@ def extract_region(numbered: NumberedComponent, region: str, allowed_chain_types
     return residues if residues else None
 
 
+def extract_variable_domain(numbered: NumberedComponent) -> str:
+    """
+    The numbered variable domain alone, gap placeholders removed.
+
+    This is the component a VH/VL/VHH comparison is actually about. ANARCII
+    numbers only the V-domain, so for a chain submitted with additional sequence
+    (a Fab heavy chain carries CH1; some entries carry tags or fusion partners)
+    `numbered.original_sequence` is strictly longer than what was numbered.
+    """
+    return "".join(
+        residue
+        for (_pos, _code), residue in numbered.imgt_numbering
+        if residue not in IMGT_GAP_CHARACTERS
+    )
+
+
+def split_chain_at_variable_domain(
+    numbered: NumberedComponent,
+) -> tuple[str, str, str]:
+    """
+    Split a source chain into (prefix, variable_domain, suffix).
+
+    Why this exists
+    ---------------
+    The source chain was being stored *whole* as the VH / VL-kappa / VL-lambda
+    component. Measured on the real corpus, that made 68% of `VH` components
+    Fab heavy chains rather than V-domains: median stored length 222 residues
+    against a median numbered V-domain of 121, the remainder being CH1.
+
+    That silently violated the project's comparison-integrity rule that a
+    variable-domain match is never a full-chain match. Constant domains are
+    near-identical between unrelated antibodies, so including them handed every
+    comparison a free similarity boost -- measured at +5.6 points of identity to
+    the nearest *other* antibody (0.858 whole-chain vs 0.803 V-domain-only).
+    The bias is directional: it makes sequences look less novel than they are.
+
+    Returns three strings, any of which may be empty:
+      prefix  residues N-terminal to the V-domain. Unknown identity -- a tag, a
+              signal peptide, a fusion partner, or another domain entirely. NOT
+              a constant region, and deliberately not typed as one.
+      domain  the numbered V-domain (what VH/VL comparison must use).
+      suffix  residues C-terminal to the V-domain. For a Fab chain this is the
+              constant domain, but it is not decomposed into CH1 / Hinge / CH2 /
+              CH3 / CL here -- that needs a constant-region reference
+              (SPEC S6.5) which is not bundled. It is stored undecomposed.
+
+    The V-domain is located by substring search rather than by offset
+    arithmetic: ANARCII reports positions, not input offsets, and insertion
+    codes mean position count does not equal residue count. Verified contiguous
+    in 11,830 / 11,830 variable-domain components of the real corpus.
+    """
+    domain = extract_variable_domain(numbered)
+    full = numbered.original_sequence
+    if not domain:
+        return "", "", ""
+
+    start = full.find(domain)
+    if start < 0:
+        # The numbered residues are not a contiguous substring of the input.
+        # Never silently fall back to the whole chain -- that is the defect this
+        # function exists to remove. Report the domain with no flanks instead,
+        # so a caller indexes the V-domain and loses no correctness.
+        return "", domain, ""
+
+    return full[:start], domain, full[start + len(domain) :]
+
+
+# Component types whose corpus records hold a numbered variable domain, and whose
+# queries must therefore be reduced to one before comparison.
+_VARIABLE_DOMAIN_TYPE_VALUES = frozenset({"VH", "VL-kappa", "VL-lambda", "VHH"})
+
+
+def normalize_query_to_variable_domain(
+    component_type_value: str, query: str
+) -> tuple[str, Optional[str]]:
+    """
+    Reduce a submitted chain to its variable domain, for comparison against the corpus.
+
+    Corpus variable-domain components hold the numbered V-domain only. A query
+    submitted as a whole chain (a Fab heavy chain, or a construct carrying a tag
+    or fusion partner) must be reduced the same way, or the comparison is
+    domain-against-chain: exact lookup misses, and coverage is capped below the
+    admissibility floor no matter how good the match is.
+
+    Returns `(sequence_to_compare, normalization_note)`. The note is None when
+    nothing was removed, and otherwise states exactly what was removed and from
+    which end -- the caller must surface it, because the input is not what was
+    compared. The original string is never mutated; the caller keeps it.
+
+    Non-variable-domain types (CDRs, frameworks, constant regions) are returned
+    unchanged: they are stored as extracted, not as chains.
+    """
+    cleaned = query.strip().upper()
+    if component_type_value not in _VARIABLE_DOMAIN_TYPE_VALUES or not cleaned:
+        return cleaned, None
+
+    numbered = number_sequence(cleaned)
+    if numbered is None or numbered.numbering_error is not None:
+        # Unnumberable. Return the input untouched rather than guessing at a
+        # domain boundary; the caller's own status handling decides what that
+        # means. Silently trimming here would be the fabrication this avoids.
+        return cleaned, None
+
+    prefix, domain, suffix = split_chain_at_variable_domain(numbered)
+    if not domain or (not prefix and not suffix):
+        return cleaned, None
+
+    parts = []
+    if prefix:
+        parts.append(f"{len(prefix)} residue(s) N-terminal to the variable domain")
+    if suffix:
+        parts.append(f"{len(suffix)} residue(s) C-terminal to the variable domain")
+    note = (
+        f"Compared the numbered variable domain ({len(domain)} residues) rather "
+        f"than the full {len(cleaned)}-residue input: removed " + " and ".join(parts) +
+        ". Corpus variable-domain components hold the V-domain only, so comparing "
+        "the whole chain would measure constant-region and flanking similarity too."
+    )
+    return domain, note
+
+
+
 def extract_cdr_h3(numbered: NumberedComponent) -> Optional[str]:
     """Extract CDR-H3 (IMGT 105-117) from a numbered heavy-chain component."""
     return extract_region(numbered, 'CDR3', HEAVY_CHAIN_TYPES)

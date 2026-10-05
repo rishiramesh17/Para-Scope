@@ -193,7 +193,10 @@ class TestEntityStoreShape:
         corpus = snapshot[0]
         assert len(therapeutics) == 1131
         assert sum(len(t.arms) for t in therapeutics.values()) == 1288
-        assert len(corpus._component_to_therapeutics) == 10186
+        # 10,185 since schema 6.0.0 (was 10,186): splitting source chains at the
+        # variable domain merged two components that differed only by constant
+        # region, so one fewer distinct component links to a therapeutic.
+        assert len(corpus._component_to_therapeutics) == 10185
 
     def test_heavy_only_arms_remain_reachable(self, therapeutics):
         """These 45 arms had no recoverable metadata before the entity store.

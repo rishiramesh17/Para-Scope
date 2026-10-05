@@ -32,6 +32,12 @@ ELIGIBLE_TYPES = frozenset({
     ComponentType.VHH,
     ComponentType.FULL_HEAVY,
     ComponentType.FULL_LIGHT,
+    # Constant regions are ~100 residues -- long enough for whole-sequence
+    # alignment scoring, and kept strictly separate from the variable domains
+    # they were split from (compare_eligibility excludes heavy-vs-light and
+    # constant-vs-variable).
+    ComponentType.CONSTANT_HEAVY,
+    ComponentType.CONSTANT_LIGHT,
     ComponentType.FR_H1,
     ComponentType.FR_H2,
     ComponentType.FR_H3,

@@ -7,7 +7,7 @@ re-measurement instructions rather than failing as a code regression.
 
 Unit fixtures cannot see the failure mode these cover. A pairing bug that counts
 source records as pairs looks perfectly correct on a two-row fixture, and only
-diverges at scale: 12,032 records across 5,686 pairs.
+diverges at scale: 12,032 records across 4,913 pairs.
 """
 
 from collections import Counter
@@ -59,13 +59,15 @@ def corpus():
 
 class TestTheTwoCountsStayDistinct:
     def test_unique_pairs_and_backing_records(self, corpus):
-        """5,686 pairs, 12,032 records. Conflating them is the Gate 8 failure mode."""
+        """4,913 pairs, 12,032 records. Conflating them is the Gate 8 failure mode."""
         unique_keys = len(corpus.pairs)
         total_records = sum(len(v) for v in corpus.pairs._index.values())
 
-        assert unique_keys == 5686
+        assert unique_keys == 4913
         assert total_records == 12032
-        assert total_records / unique_keys == pytest.approx(2.12, abs=0.01)
+        # 2.45 records per pair, up from 2.12 before schema 6.0.0: the record count is
+        # unchanged, the same records now collapse onto fewer deduplicated pairs.
+        assert total_records / unique_keys == pytest.approx(2.45, abs=0.01)
 
     def test_most_pairs_rest_on_a_single_record(self, corpus):
         """3,060 of 5,686 have exactly one backing record.
@@ -75,25 +77,32 @@ class TestTheTwoCountsStayDistinct:
         observation count is weighting a long tail, not a typical case.
         """
         depth = Counter(len(v) for v in corpus.pairs._index.values())
-        assert depth[1] == 3060
-        assert sum(depth.values()) == 5686
+        assert depth[1] == 2402
+        assert sum(depth.values()) == 4913
 
 
 class TestSourcesBarelyOverlap:
-    def test_only_two_pairs_appear_in_both_sources(self, corpus):
-        """4,562 SAbDab2-only, 1,122 Thera-SAbDab-only, 2 in both.
+    def test_source_overlap_is_small_but_real(self, corpus):
+        """3,790 SAbDab2-only, 916 Thera-SAbDab-only, 207 in both.
 
-        The structural and therapeutic databases describe almost disjoint sets of
-        chain pairs, so neither is redundant with the other and dropping either
-        would lose most of the evidence, not a duplicated subset.
+        The two databases still describe largely different chain pairs, so neither
+        is redundant and dropping either loses most of the evidence rather than a
+        duplicated subset.
+
+        The overlap was 2 before source chains were split at the variable domain
+        (corpus schema 6.0.0). A therapeutic's variable domains and a crystal
+        structure's were being stored with their constant regions attached, so the
+        same antibody present in both sources produced two different pair keys and
+        never matched itself across sources. 207 is the number of pairs genuinely
+        documented by both a structure and a drug programme.
         """
         by_sources = Counter(
             tuple(sorted({r.source_database for r in records}))
             for records in corpus.pairs._index.values()
         )
-        assert by_sources[("SAbDab2",)] == 4562
-        assert by_sources[("Thera-SAbDab",)] == 1122
-        assert by_sources[("SAbDab2", "Thera-SAbDab")] == 2
+        assert by_sources[("SAbDab2",)] == 3790
+        assert by_sources[("Thera-SAbDab",)] == 916
+        assert by_sources[("SAbDab2", "Thera-SAbDab")] == 207
 
 
 class TestStructureSupportAcrossPairs:
@@ -108,15 +117,21 @@ class TestStructureSupportAcrossPairs:
             else:
                 states["absent"] += 1
 
-        assert states["backed"] == 4852
-        assert states["absent"] == 834
+        assert states["backed"] == 4093
+        assert states["absent"] == 820
         assert states["unknown"] == 0
-        assert sum(states.values()) == 5686
+        assert sum(states.values()) == 4913
 
 
 class TestRealCandidateBehaviour:
     def test_trastuzumab_pair_resolves_with_deduplicated_counts(self, corpus):
-        """The exact pair is backed by 11 records and counts as one pair."""
+        """The exact pair is backed by 37 records and counts as one pair.
+
+        37, not 11, since schema 6.0.0: the trastuzumab variable-domain pair now
+        matches both the therapeutic programmes carrying it and the crystal
+        structures of it, which previously keyed differently because their
+        constant regions differed.
+        """
         result = compute_pairing_precedent(
             corpus, TRASTUZUMAB_VH, TRASTUZUMAB_VL,
             top_k=5, shortlist_limit=500,
@@ -128,7 +143,7 @@ class TestRealCandidateBehaviour:
         top = result.matches[0]
         assert top.heavy_global_identity == 1.0
         assert top.light_global_identity == 1.0
-        assert top.observation_count == 11
+        assert top.observation_count == 37
 
     def test_every_emitted_pair_is_in_the_index(self, corpus):
         """At corpus scale, not just on a fixture: no pair is manufactured."""
@@ -151,14 +166,14 @@ class TestRealCandidateBehaviour:
 
 class TestCuratedContentAtCorpusScale:
     def test_most_pairs_are_structural_records_with_no_drug_name(self, corpus):
-        """4,562 of 5,686. Any display design assuming a name and target exist
-        renders empty fields for four results in five."""
+        """3,790 of 4,913. Any display design assuming a name and target exist
+        renders empty fields for roughly three results in four."""
         named = sum(
             1 for records in corpus.pairs._index.values()
             if any(r.metadata.get("therapeutic_name") for r in records)
         )
-        assert named == 1124
-        assert len(corpus.pairs) - named == 4562
+        assert named == 1123
+        assert len(corpus.pairs) - named == 3790
 
     def test_one_chain_pair_can_carry_many_names_and_many_targets(self, corpus):
         """Trastuzumab's exact pair: 11 programmes, 6 distinct targets.
@@ -172,7 +187,7 @@ class TestCuratedContentAtCorpusScale:
         )
         top = result.matches[0]
 
-        assert top.observation_count == 11
+        assert top.observation_count == 37
         assert len(top.therapeutic_names) == 11
         assert len(top.targets) == 6
         assert all("HER2" in target for target in top.targets)
@@ -188,7 +203,14 @@ class TestCuratedContentAtCorpusScale:
         for match in structural:
             assert match.structure_methods
             assert all(r > 0 for r in match.structure_resolutions)
-            assert match.display_label.startswith("pdb_")
+            # A structure-backed match is labelled "pdb_..." only when no
+            # therapeutic programme shares that exact chain pair. Since schema
+            # 6.0.0 some pairs carry both, and the drug name is the more useful
+            # label -- so the assertion is that the label identifies *something*,
+            # not that structures always win.
+            assert match.display_label
+            if not match.therapeutic_names:
+                assert match.display_label.startswith("pdb_")
 
 
 class TestPairRecordsAreWellFormed:

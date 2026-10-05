@@ -64,7 +64,10 @@ from para_scope.models import (
     EvidenceStatus,
     compare_eligibility,
 )
-from para_scope.numbering import compute_sequence_checksum
+from para_scope.numbering import (
+    compute_sequence_checksum,
+    normalize_query_to_variable_domain,
+)
 
 # Bump on any change that alters an emitted measurement or the set of pairs
 # returned. Stored on every result so a stored profile is never reinterpreted
@@ -528,6 +531,18 @@ def compute_pairing_precedent(
     pairing evidence found" for one would describe a deliberate architecture as a
     missing result.
     """
+    # Both chains are reduced to their variable domains, independently, before
+    # anything is compared -- corpus variable-domain components hold V-domains
+    # only. Each note is surfaced because the input is then not what was compared.
+    heavy_sequence, heavy_note = normalize_query_to_variable_domain(
+        heavy_component_type.value, heavy_sequence or ""
+    )
+    light_note = None
+    if light_sequence:
+        light_sequence, light_note = normalize_query_to_variable_domain(
+            light_component_type.value, light_sequence
+        )
+
     result = PairingPrecedentResult(
         status=EvidenceStatus.NOT_FOUND,
         heavy_component_type=heavy_component_type,
@@ -536,6 +551,10 @@ def compute_pairing_precedent(
         light_length=len(light_sequence or ""),
         blocked_dimensions=dict(BLOCKED_DIMENSIONS),
     )
+    if heavy_note is not None:
+        result.limitations.append(f"Heavy chain: {heavy_note}")
+    if light_note is not None:
+        result.limitations.append(f"Light chain: {light_note}")
 
     if heavy_component_type not in HEAVY_TYPES or light_component_type not in LIGHT_TYPES:
         result.status = EvidenceStatus.UNSUPPORTED_COMPONENT

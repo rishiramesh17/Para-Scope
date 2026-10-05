@@ -4,7 +4,7 @@
 instructs any session to read it before planning work. If it disagrees with anyone's
 recollection — human or model — this file is right.
 
-Last verified: 2026-08-29, against commit on `main`, 316 tests passing.
+Last verified: 2026-10-04, against commit on `main`, 316 tests passing.
 
 Work proceeds in numbered gates. A gate is a unit of work that ends in a verifiable
 artifact, not a time box. Gates 0–8 are complete.
@@ -26,13 +26,14 @@ artifact, not a time box. Gates 0–8 are complete.
 | 7 | Therapeutic-precedent profile | ✅ | `reports/GATE7_THERAPEUTIC_PRECEDENT.md` |
 | 8 | Pairing precedent | ✅ | `reports/GATE8_PAIRING_PRECEDENT.md` |
 | 9.0 | Germline reference data (milestone 1) | ✅ | `reports/GATE9_GERMLINE.md` |
+| 9.1 | Variable/constant component split (milestone 2) | ✅ | `reports/GATE9_COMPONENT_SPLIT.md` |
 | **9** | **Empirical reference distributions** | **ready — blocks calibrated terms in Gates 7 and 8** | SPEC §19 Layers 2–4 |
 | 10 | Evidence strength / confidence / completeness | — | SPEC §28 |
 | **10.5** | **Construct format vocabulary + declared format input** | **— must land before 11; see below** | SPEC §26 format relevance |
 | 11 | Final profile assembly | — | SPEC §37 |
 
-Corpus under test: 46,627 components, 28,835 approximate-eligible,
-`corpus_schema_version` 5.0.0, `CACHE_FORMAT_VERSION` 1.2.0.
+Corpus under test: 46,727 components, `corpus_schema_version` 6.0.0,
+`CACHE_FORMAT_VERSION` 1.2.0.
 
 ---
 
@@ -135,6 +136,12 @@ not scored low), V gene only (no D/J call), one reference set (SPEC §11.2's
 never-silently-merge-two-germline-sets concern does not arise with only one —
 revisit if IMGT/GENE-DB is ever added alongside it).
 
+**RESOLVED 2026-10-04 — this was not a calibration problem.** The ~70%
+`NOT_FOUND` was caused by variable-domain components holding whole Fab chains, not
+by the coverage floor being miscalibrated for germline. With real V-domains a
+180-component sample returns 100% `AVAILABLE`, median nearest-germline identity
+0.726 (0.463-0.888). No separate germline floor was needed. Original note:
+
 **New carried-forward item found while measuring:** ~70% of sampled VH/VL
 components return `NOT_FOUND` rather than a value, traced to a real length
 mismatch — a share of `ComponentType.VH`-typed components are ~210–240
@@ -154,6 +161,18 @@ this, not on each other.
 ---
 
 ## The cross-cutting constraint: `FULL_HEAVY` / `FULL_LIGHT` are permanently empty
+
+**CORRECTED 2026-10-04 — SAbDab2 does carry constant-region sequence.** It was
+inside the variable-domain components: chains were stored whole, so 68% of `VH`
+components were Fab chains (median 222 residues against a 121-residue domain).
+Splitting them at the numbered variable domain yielded 1,091 `CONSTANT_HEAVY` and
+552 `CONSTANT_LIGHT` components. See `reports/GATE9_COMPONENT_SPLIT.md`.
+
+`FULL_HEAVY` / `FULL_LIGHT` *do* remain empty, but for a narrower reason than
+recorded below: a Fab chain is V + CH1 and carries no CH2/CH3, so it cannot claim
+to be a full chain. Constant-region evidence, however, is no longer absent.
+
+The original (partly incorrect) note follows.
 
 **Neither SAbDab2 nor Thera-SAbDab carries constant-region sequence.** SAbDab2's
 ML-grade release is variable-domain-only; Thera-SAbDab curates variable domains plus
@@ -235,6 +254,14 @@ index when critical evidence is missing" without declaring Fc non-critical by fi
   Confirmed to also misfire for germline matching (see "Germline reference data" above):
   ~210–240-residue VH components can never clear a query-coverage floor calibrated
   against a ~98-residue germline gene, regardless of match quality.
+- **`MIN_CONSTANT_REGION_LENGTH = 30` is provisional** (schema 6.0.0). 2,927
+  C-terminal remainders fell below it and are indexed by nothing; 4,152 chains
+  carry an N-terminal flank that no component type claims.
+- **Constant regions are undecomposed.** CH1 / Hinge / CH2 / CH3 / CL separation
+  needs a reference set (SPEC S6.5) that is not bundled. Length is not identity.
+- **Gate 7 and Gate 8 numbers predate the split.** Their code is unaffected, but
+  every measured value in their reports was computed on identities inflated ~5.6
+  points by constant regions, and has not been re-measured.
 - **Recall was measured only at `top_k=10`.** Reporting more matches per component
   requires re-measuring; it will be worse.
 - **Coverage floor and shortlist threshold interact** (stage-1 recall 0.975 vs
